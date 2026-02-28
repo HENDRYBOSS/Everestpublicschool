@@ -3,107 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nepaltr Pro - Official Terminal</title>
+    <title>Nepaltr Pro - Terminal</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        :root { --bg: #060d17; --panel: #111a27; --accent: #fcc419; --up: #00c076; --down: #ff3b30; --border: #1c2735; }
+        :root { --bg: #0b121d; --panel: #161e2b; --accent: #fcc419; --up: #00c076; --down: #ff3b30; --text: #ffffff; --border: #242d3b; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: 'Roboto', sans-serif; overflow: hidden; }
 
-        /* --- LAYOUT & SCREEN FIT --- */
-        #app-interface { display: none; flex-direction: column; height: 100vh; width: 100vw; }
+        /* --- LAYOUT --- */
+        #app-interface { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
         
-        /* --- SIDEBAR --- */
-        #sidebar { position: fixed; left: -280px; top: 0; bottom: 0; width: 280px; background: var(--panel); z-index: 20000; transition: 0.3s; border-right: 1px solid var(--border); padding: 20px; }
-        #sidebar.active { left: 0; }
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 19999; display: none; }
-        .side-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 10px; }
-
         /* --- HEADER --- */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; height: 60px; background: var(--panel); border-bottom: 1px solid var(--border); }
-        .balance-box { text-align: right; cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 6px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 0 12px; height: 55px; background: var(--panel); border-bottom: 1px solid var(--border); }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .balance-pill { background: rgba(252, 196, 25, 0.1); border: 1px solid var(--accent); padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .notif-btn { font-size: 20px; cursor: pointer; color: var(--accent); }
 
-        /* --- WALLET HUB (DEPOSIT, WITHDRAW, HISTORY) --- */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 15000; justify-content: center; align-items: center; padding: 15px; }
-        .modal-box { background: var(--panel); width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; }
-        .wallet-tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .w-tab { flex: 1; padding: 10px; text-align: center; background: #060d17; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .w-tab.active { background: var(--accent); color: black; font-weight: bold; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        /* --- CHART (Dynamic Height) --- */
+        #chart-container { flex-grow: 1; width: 100%; position: relative; background: #131722; }
 
-        /* --- TRADE DOCK (UP/DOWN BUTTONS) --- */
-        .trade-dock { background: var(--panel); padding: 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
-        .row { display: flex; gap: 8px; }
-        .input-group { flex: 1; background: #060d17; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); }
-        .input-group label { font-size: 10px; color: #848e9c; display: block; }
-        .input-group input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 16px; font-weight: bold; }
-        .btn-call { flex: 1; height: 50px; background: var(--up); border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 18px; cursor: pointer; }
-        .btn-put { flex: 1; height: 50px; background: var(--down); border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 18px; cursor: pointer; }
+        /* --- TRADE DOCK (MATCHING VIDEO) --- */
+        .trade-dock { background: var(--panel); padding: 10px; border-top: 1px solid var(--border); }
+        .trade-inputs { display: flex; gap: 8px; margin-bottom: 10px; }
+        .input-box { flex: 1; background: #0b121d; border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; }
+        .input-box label { display: block; font-size: 10px; color: #848e9c; text-transform: uppercase; }
+        .input-box input { background: transparent; border: none; color: white; width: 100%; font-size: 16px; font-weight: bold; outline: none; }
+        
+        .trade-buttons { display: flex; gap: 10px; height: 55px; }
+        .btn-trade { flex: 1; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .btn-trade.up { background: var(--up); box-shadow: 0 4px 0 #008f58; }
+        .btn-trade.down { background: var(--down); box-shadow: 0 4px 0 #c72e25; }
+        .btn-trade:active { transform: translateY(2px); box-shadow: none; }
+
+        /* --- WALLET HUB MODAL --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 10000; justify-content: center; align-items: center; }
+        .hub-box { background: var(--panel); width: 90%; max-width: 380px; border-radius: 15px; padding: 20px; border: 1px solid var(--border); }
+        .hub-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .hub-item { background: #0b121d; padding: 15px 5px; border-radius: 10px; text-align: center; cursor: pointer; border: 1px solid var(--border); font-size: 12px; }
+        .hub-item:hover { border-color: var(--accent); }
+        .hub-item i { display: block; font-size: 24px; margin-bottom: 5px; }
+
+        /* --- NOTIFICATIONS --- */
+        #notif-pane { position: fixed; right: -300px; top: 55px; bottom: 0; width: 280px; background: var(--panel); z-index: 9000; transition: 0.3s; padding: 15px; border-left: 1px solid var(--border); }
+        #notif-pane.active { right: 0; }
     </style>
 </head>
 <body>
 
-<div class="sidebar-overlay" id="side-overlay" onclick="toggleSidebar(false)"></div>
-<div id="sidebar">
-    <h3 style="color:var(--accent)">NEPALTR PRO</h3>
-    <div class="side-item" onclick="openWallet('deposit')">💳 Deposit</div>
-    <div class="side-item" onclick="openWallet('withdraw')">🏧 Withdraw</div>
-    <div class="side-item" onclick="openWallet('history')">📜 History</div>
-    <div class="side-item" onclick="firebase.auth().signOut()" style="margin-top:20px; color:var(--down)">🚪 Logout</div>
-</div>
-
 <div id="app-interface">
     <header>
-        <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-        <div class="balance-box" onclick="openWallet('deposit')">
-            <div id="user-bal" style="font-weight:bold; color:var(--accent)">NPR 0.00</div>
+        <div style="font-size: 20px; font-weight: bold; color: var(--accent);">NEPALTR</div>
+        <div class="header-right">
+            <div class="balance-pill" onclick="toggleHub(true)">
+                <span style="font-size: 18px;">👛</span>
+                <span id="user-bal" style="font-weight: bold;">NPR 0.00</span>
+            </div>
+            <div class="notif-btn" onclick="toggleNotif()">🔔</div>
         </div>
     </header>
 
-    <div id="chart-area" style="flex:1;"><div id="tv_widget" style="height:100%;"></div></div>
+    <div id="chart-container">
+        <div id="tv_widget" style="height: 100%; width: 100%;"></div>
+    </div>
 
     <div class="trade-dock">
-        <div class="row">
-            <div class="input-group"><label>INVESTMENT</label><input type="number" id="t-amt" value="300"></div>
-            <div class="input-group"><label>TIME</label><input type="text" value="01:00" readonly></div>
+        <div class="trade-inputs">
+            <div class="input-box">
+                <label>Investment (NPR)</label>
+                <input type="number" id="trade-amount" value="130">
+            </div>
+            <div class="input-box">
+                <label>Time</label>
+                <input type="text" value="01:00" readonly>
+            </div>
         </div>
-        <div class="row">
-            <button class="btn-call" onclick="executeTrade('UP')">CALL (UP)</button>
-            <button class="btn-put" onclick="executeTrade('DOWN')">PUT (DOWN)</button>
+        <div class="trade-buttons">
+            <button class="btn-trade up" onclick="placeTrade('UP')">HIGHER</button>
+            <button class="btn-trade down" onclick="placeTrade('DOWN')">LOWER</button>
         </div>
     </div>
 </div>
 
-<div id="wallet-modal" class="modal" onclick="closeWallet(event)">
-    <div class="modal-box">
-        <div class="wallet-tabs">
-            <div class="w-tab" id="tab-btn-deposit" onclick="switchTab('deposit')">DEPOSIT</div>
-            <div class="w-tab" id="tab-btn-withdraw" onclick="switchTab('withdraw')">WITHDRAW</div>
-            <div class="w-tab" id="tab-btn-history" onclick="switchTab('history')">HISTORY</div>
+<div id="wallet-hub" class="modal" onclick="closeHub(event)">
+    <div class="hub-box">
+        <h3 style="margin-top:0; text-align:center;">Wallet Hub</h3>
+        <div id="hub-balance-large" style="font-size: 24px; text-align:center; color:var(--accent); font-weight:bold; margin: 10px 0;">NPR 0.00</div>
+        
+        <div class="hub-options">
+            <div class="hub-item" onclick="alert('Deposit Form Opening...')"><i>💳</i>Deposit</div>
+            <div class="hub-item" onclick="alert('Withdraw Form Opening...')"><i>🏧</i>Withdraw</div>
+            <div class="hub-item" onclick="alert('Loading History...')"><i>📜</i>History</div>
         </div>
+    </div>
+</div>
 
-        <div id="deposit-ui" class="tab-content">
-            <div style="background:white; text-align:center; padding:10px; margin-bottom:10px;"><img id="qr-img" style="width:150px;"></div>
-            <input type="number" id="d-amt" style="width:100%; padding:12px; background:#060d17; border:1px solid #1c2735; color:white;" placeholder="Amount NPR">
-            <button class="btn-call" style="width:100%; margin-top:10px;" onclick="handleDeposit()">Deposit Now</button>
-        </div>
-
-        <div id="withdraw-ui" class="tab-content">
-            <input type="number" id="w-amt" style="width:100%; padding:12px; background:#060d17; border:1px solid #1c2735; color:white;" placeholder="Amount">
-            <button class="btn-put" style="width:100%; margin-top:10px;" onclick="alert('Withdrawal Request Sent')">Withdraw</button>
-        </div>
-
-        <div id="history-ui" class="tab-content"><div id="hist-list"></div></div>
+<div id="notif-pane">
+    <h4 style="margin-top:0; border-bottom:1px solid var(--border); padding-bottom:10px;">Notifications</h4>
+    <div id="notif-list" style="font-size: 13px; color: #848e9c; text-align: center; padding-top: 20px;">
+        No new notifications
     </div>
 </div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
       apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
       authDomain: "earning-website-644a7.firebaseapp.com",
@@ -117,42 +124,38 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
+    // --- UI LOGIC ---
+    function toggleHub(show) {
+        document.getElementById('wallet-hub').style.display = show ? 'flex' : 'none';
+    }
+
+    function closeHub(e) {
+        if(e.target.id === 'wallet-hub') toggleHub(false);
+    }
+
+    function toggleNotif() {
+        document.getElementById('notif-pane').classList.toggle('active');
+    }
+
+    // --- DATA SYNC ---
     auth.onAuthStateChanged(user => {
         if(user) {
-            document.getElementById('app-interface').style.display = 'flex';
-            syncData(user.uid);
+            db.ref('users/' + user.uid).on('value', snap => {
+                const bal = snap.val()?.balance || 0;
+                const formattedBal = "NPR " + bal.toFixed(2);
+                document.getElementById('user-bal').innerText = formattedBal;
+                document.getElementById('hub-balance-large').innerText = formattedBal;
+            });
             initChart();
         } else {
-            // Re-show your registration/login landing page here
+            auth.signInAnonymously(); // Auto-login for testing
         }
     });
 
-    function toggleSidebar(show) {
-        document.getElementById('sidebar').classList.toggle('active', show);
-        document.getElementById('side-overlay').style.display = show ? 'block' : 'none';
-    }
-
-    function openWallet(tab) {
-        toggleSidebar(false);
-        document.getElementById('wallet-modal').style.display = 'flex';
-        switchTab(tab);
-    }
-
-    function closeWallet(e) { if(e.target.id === 'wallet-modal') e.target.style.display = 'none'; }
-
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.w-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(tab + '-ui').classList.add('active');
-        document.getElementById('tab-btn-' + tab).classList.add('active');
-        if(tab === 'history') loadHistory();
-    }
-
-    function syncData(uid) {
-        db.ref('users/'+uid).on('value', snap => {
-            document.getElementById('user-bal').innerText = "NPR " + (snap.val()?.balance || 0).toFixed(2);
-        });
-        db.ref('settings/qrUrl').on('value', s => { document.getElementById('qr-img').src = s.val() || ''; });
+    function placeTrade(direction) {
+        const amt = document.getElementById('trade-amount').value;
+        alert(`Trade Placed: ${direction} for NPR ${amt}`);
+        // Add actual database logic here to deduct balance
     }
 
     function initChart() {
@@ -161,12 +164,17 @@
             "symbol": "BINANCE:BTCUSDT",
             "interval": "1",
             "theme": "dark",
+            "style": "1",
+            "locale": "en",
             "container_id": "tv_widget",
-            "enabled_features": ["side_toolbar_in_compact_mode"]
+            "hide_top_toolbar": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "save_image": false,
+            "backgroundColor": "#131722",
+            "gridColor": "#242d3b"
         });
     }
-
-    // Trade and Deposit logic remains similar to previous updates but now with fixed UI visibility
 </script>
 </body>
 </html>
