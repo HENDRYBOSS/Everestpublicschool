@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nepaltr Pro - Trading Platform</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
         :root { --bg: #060d17; --panel: #111a27; --accent: #fcc419; --up: #00c076; --down: #ff3b30; --text: #ffffff; --text-dim: #848e9c; }
@@ -35,7 +35,7 @@
         .balance-display { text-align: right; cursor: pointer; }
         .wallet-plus { background: var(--accent); color: black; width: 32px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
 
-        /* Trading Dock */
+        /* Trading Area Styles */
         .trade-dock { background: var(--panel); border-top: 1px solid #1c2735; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
         .row { display: flex; gap: 10px; }
         .ctrl { flex: 1; background: #060d17; padding: 5px 10px; border-radius: 8px; border: 1px solid #1c2735; }
@@ -43,11 +43,10 @@
         .ctrl input, .ctrl select { background: transparent; border: none; color: white; width: 100%; outline: none; font-weight: bold; font-size: 16px; }
         .btn-trade { flex: 1; height: 55px; border: none; border-radius: 8px; font-weight: bold; font-size: 24px; color: white; cursor: pointer; }
 
-        /* Modal Layout */
         #wallet-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 11000; justify-content: center; align-items: flex-end; }
         .modal-box { background: var(--panel); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 30px; box-sizing: border-box; }
         #qr-box { background: white; width: 200px; height: 200px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
-        #qr-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 0; }
+        #qr-box img { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -55,8 +54,8 @@
 <div id="landing-page">
     <div class="hero">
         <img src="https://images.unsplash.com/photo-1611974717482-48206d289065?w=600" alt="Trader">
-        <h1>Your Trading Platform</h1>
-        <p>Join thousands of traders in Nepal</p>
+        <h1>Nepaltr Pro</h1>
+        <p>Your Professional Trading Partner</p>
         <button class="btn-deposit" onclick="scrollToAuth()">START NOW</button>
     </div>
 
@@ -77,7 +76,7 @@
 
 <div id="app-interface">
     <header>
-        <div onclick="alert('Sidebar')">☰ <b>Nepaltr</b></div>
+        <div>☰ <b>Nepaltr</b></div>
         <div class="header-tools">
             <div class="balance-display" onclick="openWallet()">
                 <div style="font-size:10px; color:var(--text-dim)">Demo account ▼</div>
@@ -86,11 +85,9 @@
             <div class="wallet-plus" onclick="openWallet()">+</div>
         </div>
     </header>
-
     <div id="chart-area" style="flex:1; background:#131722">
         <div id="tv_widget" style="height:100%"></div>
     </div>
-
     <div class="trade-dock">
         <div class="row">
             <div class="ctrl">
@@ -116,9 +113,7 @@
     <div class="modal-box">
         <div style="text-align:right; font-size:30px; cursor:pointer;" onclick="closeWallet()">×</div>
         <h2 style="text-align:center">Deposit</h2>
-        <div id="qr-box">
-            <img id="admin-qr" src="">
-        </div>
+        <div id="qr-box"><img id="admin-qr" src=""></div>
         <div style="text-align:center; margin-bottom:15px;">
             <a id="dl-link" href="#" download style="color:var(--accent)">Download QR Code</a>
         </div>
@@ -129,20 +124,25 @@
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
+    // --- INTEGRATED YOUR SPECIFIC FIREBASE CONFIG ---
     const firebaseConfig = {
-        apiKey: "AIzaSy...", // Replace with your key
-        authDomain: "earning-website-644a7.firebaseapp.com",
-        databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "earning-website-644a7",
-        storageBucket: "earning-website-644a7.firebasestorage.app",
+      apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
+      authDomain: "earning-website-644a7.firebaseapp.com",
+      databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "earning-website-644a7",
+      storageBucket: "earning-website-644a7.firebasestorage.app",
+      messagingSenderId: "20748471330",
+      appId: "1:20748471330:web:5e8d18499679ecb3d04e7b",
+      measurementId: "G-696F2S2RKN"
     };
+
+    // Initialize
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
     let currentMode = 'reg';
 
-    // --- Authentication ---
     function toggleAuth(mode) {
         currentMode = mode;
         document.getElementById('tab-reg').classList.toggle('active', mode==='reg');
@@ -162,10 +162,7 @@
 
     function googleSignIn() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(err => {
-            console.error(err);
-            alert("Ensure your domain is authorized in Firebase Console > Auth > Settings");
-        });
+        auth.signInWithPopup(provider).catch(err => alert(err.message));
     }
 
     auth.onAuthStateChanged(user => {
@@ -177,35 +174,34 @@
         }
     });
 
-    // --- Trading & Wallet Logic ---
     function syncUser(uid) {
         db.ref('users/' + uid).on('value', snap => {
-            const data = snap.val() || { balance: 0, firstDep: true };
+            const data = snap.val() || { balance: 0 };
             document.getElementById('user-bal').innerText = "NPR " + data.balance.toFixed(2);
         });
         db.ref('settings/qrUrl').on('value', s => {
-            document.getElementById('admin-qr').src = s.val();
-            document.getElementById('dl-link').href = s.val();
+            document.getElementById('admin-qr').src = s.val() || '';
+            document.getElementById('dl-link').href = s.val() || '#';
         });
     }
 
     async function submitDeposit() {
         const uid = auth.currentUser.uid;
         const promo = document.getElementById('promo-input').value.trim();
-        const amt = 1000; // Mock amount for example
+        const amt = 1000; 
 
         const ref = db.ref('users/' + uid);
         const snap = await ref.once('value');
         const user = snap.val() || { balance: 0, firstDep: true };
 
         let bonus = 0;
-        if(user.firstDep) {
-            bonus = amt * 0.20; // 20% First Deposit Bonus
-            if(promo === "NEPAL") bonus += amt * 0.10; // Extra Promo Bonus
+        if(user.firstDep !== false) {
+            bonus = amt * 0.20; 
+            if(promo === "NEPAL") bonus += amt * 0.10;
         }
 
         await ref.update({
-            balance: user.balance + amt + bonus,
+            balance: (user.balance || 0) + amt + bonus,
             firstDep: false
         });
         alert(`Deposited ${amt}. Bonus added: ${bonus}`);
@@ -213,7 +209,7 @@
     }
 
     function placeTrade(dir) {
-        alert(`Trade ${dir} placed at ${new Date().toLocaleTimeString()}`);
+        alert(`Trade ${dir} placed!`);
     }
 
     function openWallet() { document.getElementById('wallet-modal').style.display='flex'; }
@@ -222,4 +218,4 @@
     function initChart() { new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv_widget" }); }
 </script>
 </body>
-    </html>
+</html>
