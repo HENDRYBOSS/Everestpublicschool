@@ -3,86 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nepaltr Pro - Ultimate Trading</title>
+    <title>Nepaltr Pro | User</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --up: #0ecb81; --down: #f6465d; --border: #2b3139; --text-dim: #848e9c; }
+        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --border: #2b3139; --text-dim: #848e9c; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        /* Navigation & Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 1001; position: relative; }
-        .pfp-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); background: #333; cursor: pointer; }
-
-        /* Sidebar Menu */
-        #sidebar { position: fixed; right: -280px; top: 0; width: 260px; height: 100%; background: var(--panel); z-index: 9000; transition: 0.3s; border-left: 1px solid var(--border); overflow-y: auto; }
-        #sidebar.open { right: 0; }
-        .side-item { padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .side-item:active { background: #2b3139; }
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel); border-bottom: 1px solid var(--border); }
+        .pfp-img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); cursor: pointer; }
 
         /* Modals */
-        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9500; padding: 20px; }
-        .modal-box { background: var(--panel); width: 100%; max-width: 380px; padding: 25px; border-radius: 15px; border: 1px solid var(--border); position: relative; max-height: 80vh; overflow-y: auto; }
+        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .modal-box { background: var(--panel); width: 100%; max-width: 360px; padding: 25px; border-radius: 16px; border: 1px solid var(--border); position: relative; }
         .input-f { width: 100%; padding: 12px; margin-bottom: 12px; background: #000; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
-        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000; margin-bottom: 10px; }
-        .btn-google { width: 100%; padding: 12px; background: white; color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        
+        /* Buttons */
+        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000; margin-top: 5px; }
+        .google-btn { width: 100%; padding: 12px; background: white; color: #000; border: none; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 15px; border: 1px solid #ddd; }
+        .google-btn img { width: 20px; }
 
-        /* Trading & UI */
-        #result-anim { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; background: rgba(0,0,0,0.85); font-size: 35px; font-weight: 900; text-align: center; }
-        .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); border-top: 1px solid var(--border); padding: 15px; display: flex; gap: 10px; box-sizing: border-box; }
-        .t-btn { flex: 1; height: 55px; border: none; border-radius: 10px; font-weight: bold; color: white; cursor: pointer; font-size: 16px; }
+        /* Sidebar */
+        #sidebar { position: fixed; right: -280px; top: 0; width: 260px; height: 100%; background: var(--panel); z-index: 9000; transition: 0.3s; border-left: 1px solid var(--border); }
+        #sidebar.open { right: 0; }
+        .side-item { padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div id="result-anim"></div>
-
 <header>
-    <div style="font-weight:bold; font-size: 18px;">Nepal<span style="color:var(--accent)">tr</span></div>
-    <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="font-weight:bold; font-size: 20px;">Nepal<span style="color:var(--accent)">tr</span></div>
+    <div style="display:flex; align-items:center; gap:12px;">
         <div id="top-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</div>
-        <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="pfp-small" onclick="openMod('profile')">
-        <div onclick="toggleSidebar(true)" style="font-size:22px; cursor:pointer;">☰</div>
+        <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="pfp-img" onclick="openMod('profile')">
+        <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
     </div>
 </header>
 
 <div id="sidebar">
-    <div style="padding:25px; background:#12151a; font-weight:bold; color:var(--accent); letter-spacing: 1px;">NEPALTR MENU</div>
-    
-    <div class="side-item" onclick="openMod('auth')">🔑 Sign In / Register</div>
-    <div class="side-item" onclick="openMod('deposit')">💳 Deposit (View QR)</div>
-    <div class="side-item" onclick="openMod('withdraw')">💸 Withdrawal Info</div>
-    
-    <div class="side-item" onclick="openMod('profile')">⚙️ Edit Profile & Name</div>
-    <div class="side-item" onclick="openMod('referral')">📢 Referral Link</div>
-    <div class="side-item" onclick="openMod('history')">📜 Transaction History</div>
-    
-    <div class="side-item" onclick="auth.signOut(); location.reload();" style="color:var(--down); border-top: 1px solid #333;">🚪 Logout</div>
-    <div class="side-item" onclick="toggleSidebar(false)" style="color:gray; text-align:center; display:block;">✕ Close Menu</div>
+    <div style="padding:25px; background:#12151a; font-weight:bold; color:var(--accent);">MENU</div>
+    <div class="side-item" onclick="openMod('login')">🔑 Login</div>
+    <div class="side-item" onclick="openMod('register')">📝 Register</div>
+    <div class="side-item" onclick="openMod('deposit')">💳 Deposit Funds</div>
+    <div class="side-item" onclick="openMod('withdraw')">💸 Withdrawal</div>
+    <div class="side-item" onclick="openMod('referral')">📢 Refer & Earn</div>
+    <div class="side-item" onclick="auth.signOut(); location.reload();" style="color:#f6465d">Logout</div>
 </div>
 
 <div id="modal-wrap" class="modal-wrap">
     <div class="modal-box" id="modal-content"></div>
 </div>
 
-<div id="tv_chart" style="height: calc(100vh - 165px);"></div>
-
-<div class="dock">
-    <button class="t-btn" style="background:var(--up)" onclick="handleTrade('UP')">CALL (UP)</button>
-    <button class="t-btn" style="background:var(--down)" onclick="handleTrade('DOWN')">PUT (DOWN)</button>
-</div>
+<div id="tv_chart" style="height: calc(100vh - 65px);"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
-      databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app"
+        apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
+        databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
 
-    let balance = 0, tradeCount = 0, currentUser = null;
+    let currentUser = null, balance = 0;
+
+    // Capture referral UID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('ref')) localStorage.setItem('ref_uid', urlParams.get('ref'));
 
     auth.onAuthStateChanged(user => {
         currentUser = user;
@@ -90,7 +79,6 @@
             db.ref('users/' + user.uid).on('value', snap => {
                 const data = snap.val() || {};
                 balance = data.balance || 0;
-                tradeCount = data.tradeCount || 0;
                 document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
                 if(data.profilePic) document.getElementById('h-pfp').src = data.profilePic;
             });
@@ -103,83 +91,80 @@
     function openMod(type) {
         const box = document.getElementById('modal-content');
         document.getElementById('modal-wrap').style.display = 'flex';
-        box.innerHTML = `<span onclick="closeMod()" style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px;">✕</span>`;
+        box.innerHTML = `<span onclick="closeMod()" style="position:absolute; right:15px; top:10px; cursor:pointer;">✕</span>`;
 
-        if(type === 'auth') {
-            box.innerHTML += `<h3>Account Access</h3>
-                <button class="btn-google" onclick="googleLogin()">Continue with Google</button>
-                <div style="text-align:center; margin:10px 0; color:gray;">OR</div>
-                <input id="email" placeholder="Email" class="input-f">
-                <input id="pass" type="password" placeholder="Password" class="input-f">
-                <button class="btn-yellow" onclick="doAuth()">Login / Register</button>`;
-        } 
-        else if(type === 'profile') {
-            if(!currentUser) return box.innerHTML += "<h3>Please Login</h3><p>Login to edit profile.</p>";
-            box.innerHTML += `<h3>Edit Profile</h3>
-                <input id="p-name" placeholder="Update Name" class="input-f">
-                <label style="font-size:11px;">Upload Profile Picture</label>
+        if(type === 'login') {
+            box.innerHTML += `<h3>Login</h3>
+                <button class="google-btn" onclick="googleAuth()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Login with Google
+                </button>
+                <input id="em" placeholder="Email" class="input-f">
+                <input id="ps" type="password" placeholder="Password" class="input-f">
+                <button class="btn-yellow" onclick="emailAuth('login')">Sign In</button>
+                <p style="font-size:12px; text-align:center; margin-top:10px;">New? <span onclick="openMod('register')" style="color:var(--accent); cursor:pointer;">Register here</span></p>`;
+        } else if(type === 'register') {
+            box.innerHTML += `<h3>Create Account</h3>
+                <button class="google-btn" onclick="googleAuth()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Register with Google
+                </button>
+                <input id="em" placeholder="Email" class="input-f">
+                <input id="ps" type="password" placeholder="Password" class="input-f">
+                <button class="btn-yellow" onclick="emailAuth('reg')">Create Account</button>`;
+        } else if(type === 'referral') {
+            const link = window.location.origin + window.location.pathname + "?ref=" + (currentUser ? currentUser.uid : 'LOGIN_REQUIRED');
+            box.innerHTML += `<h3>Refer & Earn</h3>
+                <p style="font-size:12px;">Get 25% commission on friend's deposits!</p>
+                <div style="background:#000; padding:10px; border-radius:8px; font-size:10px; word-break:break-all; border:1px dashed var(--accent); color:var(--accent);">${link}</div>
+                <button class="btn-yellow" onclick="navigator.clipboard.writeText('${link}'); alert('Copied!')">Copy Link</button>`;
+        } else if(type === 'profile') {
+            box.innerHTML += `<h3>Profile Edit</h3>
+                <input id="p-name" placeholder="Display Name" class="input-f">
+                <label style="font-size:11px;">Change Photo</label>
                 <input type="file" id="p-file" class="input-f" accept="image/*">
-                <button class="btn-yellow" onclick="saveProfile()">Save Changes</button>`;
-        }
-        else if(type === 'deposit') {
+                <button class="btn-yellow" onclick="updateProfile()">Update Profile</button>`;
+        } else if(type === 'deposit') {
             db.ref('admin_settings/qrCode').once('value', snap => {
-                box.innerHTML += `<h3>Deposit Money</h3>
-                    <img src="${snap.val() || ''}" style="width:180px; display:block; margin:auto; background:white; padding:5px; border-radius:10px;">
-                    <p style="font-size:12px; text-align:center; color:var(--accent); margin-top:10px;">Scan to Pay. Min NPR 300.</p>
-                    ${currentUser ? `
-                    <input type="number" id="d-amt" placeholder="Amount Sent" class="input-f">
-                    <input type="file" id="d-file" class="input-f" accept="image/*">
-                    <button class="btn-yellow" onclick="saveDep()">Submit Proof</button>` 
-                    : `<button class="btn-yellow" onclick="openMod('auth')">Login to Submit Proof</button>`}`;
-            });
-        }
-        else if(type === 'withdraw') {
-            box.innerHTML += `<h3>Withdrawal</h3>
-                <p style="font-size:12px; color:var(--text-dim);">Minimum Withdrawal: NPR 500</p>
-                ${currentUser ? `
-                <input type="number" id="w-amt" placeholder="Amount" class="input-f">
-                <input type="text" id="w-wallet" placeholder="eSewa/Khalti Number" class="input-f">
-                <button class="btn-yellow" onclick="requestWithdraw()">Request Withdrawal</button>`
-                : `<button class="btn-yellow" onclick="openMod('auth')">Login to Withdraw</button>`}`;
-        }
-        else if(type === 'history') {
-            if(!currentUser) return box.innerHTML += "<h3>Login Required</h3>";
-            box.innerHTML += `<h3>Trade History</h3><div id="hist-list" style="font-size:12px;">Loading...</div>`;
-            db.ref('transactions/'+currentUser.uid).limitToLast(10).on('value', s => {
-                const h = document.getElementById('hist-list'); h.innerHTML = "";
-                s.forEach(c => {
-                    const d = c.val();
-                    h.innerHTML += `<div style="padding:8px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-                        <span>${d.type}</span> <span style="color:${d.amount > 0 ? 'var(--up)' : 'var(--down)'}">NPR ${d.amount}</span>
-                    </div>`;
-                });
+                box.innerHTML += `<h3>Deposit</h3>
+                    <img src="${snap.val() || ''}" style="width:160px; display:block; margin:auto; background:white; padding:5px; border-radius:10px;">
+                    <input type="number" id="d-amt" placeholder="Amount Sent" class="input-f" style="margin-top:10px;">
+                    <input type="file" id="d-proof" class="input-f" accept="image/*">
+                    <button class="btn-yellow" onclick="submitDep()">Submit Proof</button>`;
             });
         }
     }
 
-    // AUTH LOGIC
-    async function googleLogin() {
+    async function googleAuth() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithPopup(provider);
+        const result = await auth.signInWithPopup(provider);
+        await initUser(result.user);
         closeMod();
     }
 
-    async function doAuth() {
-        const e = document.getElementById('email').value.trim(), p = document.getElementById('pass').value;
-        try { await auth.signInWithEmailAndPassword(e, p); }
-        catch { 
-            const c = await auth.createUserWithEmailAndPassword(e, p);
-            await db.ref('users/'+c.user.uid).set({balance:0, tradeCount:0, isFirstDeposit: true});
+    async function emailAuth(mode) {
+        const e = document.getElementById('em').value, p = document.getElementById('ps').value;
+        try {
+            const result = (mode === 'login') ? await auth.signInWithEmailAndPassword(e, p) : await auth.createUserWithEmailAndPassword(e, p);
+            if(mode === 'reg') await initUser(result.user);
+            closeMod();
+        } catch(err) { alert(err.message); }
+    }
+
+    async function initUser(user) {
+        const ref = localStorage.getItem('ref_uid');
+        const snap = await db.ref('users/'+user.uid).get();
+        if(!snap.exists()) {
+            await db.ref('users/'+user.uid).set({ balance: 0, tradeCount: 0, referredBy: ref || null });
         }
-        closeMod();
     }
 
-    function saveProfile() {
-        const name = document.getElementById('p-name').value, file = document.getElementById('p-file').files[0];
+    function updateProfile() {
+        const name = document.getElementById('p-name').value;
+        const file = document.getElementById('p-file').files[0];
         if(file) {
-            const r = new FileReader(); r.readAsDataURL(file);
-            r.onload = async () => {
-                await db.ref('users/'+currentUser.uid).update({ name: name || currentUser.email.split('@')[0], profilePic: r.result });
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                await db.ref('users/'+currentUser.uid).update({ name: name, profilePic: reader.result });
                 alert("Profile Updated!"); closeMod();
             };
         } else {
@@ -188,35 +173,14 @@
         }
     }
 
-    function saveDep() {
-        const amt = document.getElementById('d-amt').value, file = document.getElementById('d-file').files[0];
-        const r = new FileReader(); r.readAsDataURL(file);
-        r.onload = async () => {
-            await db.ref('admin_deposits').push({uid: currentUser.uid, amount: amt, proof: r.result, status:'pending'});
-            alert("Screenshot Sent!"); closeMod();
+    function submitDep() {
+        const amt = document.getElementById('d-amt').value, file = document.getElementById('d-proof').files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            await db.ref('admin_deposits').push({ uid: currentUser.uid, amount: amt, proof: reader.result, status: 'pending' });
+            alert("Proof Sent! Waiting for Admin approval."); closeMod();
         };
-    }
-
-    function handleTrade(dir) {
-        if(!currentUser || balance < 300) return alert("Low Balance!");
-        db.ref('users/'+currentUser.uid+'/balance').set(balance - 300);
-        const anim = document.getElementById('result-anim');
-        anim.style.display = 'flex'; anim.innerHTML = "TRADING...";
-        
-        setTimeout(() => {
-            tradeCount++;
-            const win = (tradeCount % 10 === 3 || tradeCount % 10 === 7);
-            if(win) {
-                db.ref('users/'+currentUser.uid+'/balance').set(balance + 555);
-                db.ref('transactions/'+currentUser.uid).push({type:'Trade Win', amount: 555});
-                anim.innerHTML = `<span style="color:var(--up)">WIN<br>+NPR 555</span>`;
-            } else {
-                db.ref('transactions/'+currentUser.uid).push({type:'Trade Loss', amount: -300});
-                anim.innerHTML = `<span style="color:var(--down)">LOSS<br>-NPR 300</span>`;
-            }
-            db.ref('users/'+currentUser.uid+'/tradeCount').set(tradeCount);
-            setTimeout(() => anim.style.display = 'none', 2000);
-        }, 3000);
     }
 
     new TradingView.widget({"autosize": true, "symbol": "BINANCE:BTCUSDT", "theme": "dark", "container_id": "tv_chart"});
