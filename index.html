@@ -13,27 +13,22 @@
         :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --up: #0ecb81; --down: #f6465d; --text-dim: #848e9c; --border: #2b3139; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        /* Header */
         header { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; height: 55px; border-bottom: 1px solid var(--border); background: var(--panel); z-index: 1001; }
         #top-bal { font-size: 14px; font-weight: bold; color: var(--accent); }
 
-        /* Sidebar */
         #sidebar { position: fixed; right: -280px; top: 0; width: 260px; height: 100%; background: var(--panel); z-index: 9000; transition: 0.3s; border-left: 1px solid var(--border); }
         #sidebar.open { right: 0; }
         .side-item { padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; color: white; font-size: 14px; }
 
-        /* Modals */
         .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9500; padding: 20px; }
         .modal-box { background: var(--panel); width: 100%; max-width: 400px; border-radius: 16px; padding: 25px; border: 1px solid var(--border); position: relative; }
         .close-x { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: var(--text-dim); font-weight: bold; }
         .input-f { width: 100%; padding: 12px; margin-bottom: 12px; background: #12151a; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
         .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* QR Square Space */
         .qr-square { width: 180px; height: 180px; background: #fff; margin: 0 auto 15px; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--accent); }
         .qr-square img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Dock Trading */
         .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); border-top: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
         .dock-row { display: flex; gap: 10px; }
         .inp-box { flex: 1; background: #12151a; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
@@ -43,7 +38,6 @@
         .t-btn { flex: 1; height: 50px; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: white; cursor: pointer; transition: 0.1s; }
         .t-btn:active { transform: scale(0.95); opacity: 0.8; }
 
-        /* Active Trade Animation */
         #active-trades { position: absolute; top: 70px; right: 20px; z-index: 2000; }
         .trade-card { background: var(--panel); border-left: 4px solid var(--accent); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -65,7 +59,7 @@
     <div class="side-item" onclick="openModal('deposit')">💳 Deposit Funds</div>
     <div class="side-item" onclick="openModal('withdraw')">💸 Withdrawal</div>
     <div class="side-item" onclick="openModal('history')">📜 History</div>
-    <div class="side-item" onclick="firebase.auth().signOut()">🚪 Logout</div>
+    <div class="side-item" onclick="handleLogout()">🚪 Logout</div>
     <div class="side-item" onclick="toggleSidebar(false)" style="color:gray;">❌ Close</div>
 </div>
 
@@ -84,9 +78,6 @@
             <select id="trade-time">
                 <option value="30">30 Sec</option>
                 <option value="60">1 Min</option>
-                <option value="300">5 Min</option>
-                <option value="3600">1 Hour</option>
-                <option value="43200">12 Hours</option>
             </select>
         </div>
         <div class="inp-box">
@@ -102,14 +93,18 @@
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
+    // NEW FIREBASE CONFIGURATION
     const firebaseConfig = {
-      apiKey: "AIzaSyCC8aUjhB_SbMICsn106a0gpAtDBy4W9As",
-      authDomain: "free-fire-turnament-e532a.firebaseapp.com",
-      databaseURL: "https://free-fire-turnament-e532a-default-rtdb.firebaseio.com",
-      projectId: "free-fire-turnament-e532a",
-      storageBucket: "free-fire-turnament-e532a.firebasestorage.app",
-      appId: "1:245754065877:web:50fd548899e2164502835c"
+        apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
+        authDomain: "earning-website-644a7.firebaseapp.com",
+        databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "earning-website-644a7",
+        storageBucket: "earning-website-644a7.firebasestorage.app",
+        messagingSenderId: "20748471330",
+        appId: "1:20748471330:web:5e8d18499679ecb3d04e7b",
+        measurementId: "G-696F2S2RKN"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
@@ -117,15 +112,24 @@
 
     let currentUser = null;
     let balance = 0;
+    let tradeCount = 0; // Tracks the 10-trade cycle
 
     auth.onAuthStateChanged(user => {
         currentUser = user;
         if(user) {
             document.getElementById('auth-label').innerText = "👤 " + user.email.split('@')[0];
+            // Listen for balance changes
             db.ref('users/' + user.uid + '/balance').on('value', snap => {
                 balance = snap.val() || 0;
                 document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
             });
+            // Listen for trade cycle count
+            db.ref('users/' + user.uid + '/tradeCount').on('value', snap => {
+                tradeCount = snap.val() || 0;
+            });
+        } else {
+            document.getElementById('auth-label').innerText = "👤 Sign In / Register";
+            document.getElementById('top-bal').innerText = "NPR 0.00";
         }
     });
 
@@ -136,7 +140,6 @@
         const box = document.getElementById('modal-content');
         document.getElementById('modal-wrap').style.display = 'flex';
         box.innerHTML = `<span class="close-x" onclick="closeModal()">×</span>`;
-
         if(type === 'auth') renderAuth(box);
         else if(type === 'deposit') renderDeposit(box);
         else if(type === 'withdraw') renderWithdraw(box);
@@ -158,7 +161,11 @@
             <input type="file" id="d-file" class="input-f">
             <button class="btn-yellow" onclick="doDeposit()">Submit Proof</button>`;
         db.ref('settings/global_qr').on('value', snap => {
-            if(snap.val()) { document.getElementById('admin-qr-img').src = snap.val(); document.getElementById('admin-qr-img').style.display="block"; document.getElementById('qr-wait').style.display="none"; }
+            if(snap.val()) { 
+                document.getElementById('admin-qr-img').src = snap.val(); 
+                document.getElementById('admin-qr-img').style.display="block"; 
+                document.getElementById('qr-wait').style.display="none"; 
+            }
         });
     }
 
@@ -171,59 +178,99 @@
     }
 
     function renderHistory(box) {
-        if(!currentUser) { box.innerHTML += "<p>Please login to see history.</p>"; return; }
+        if(!currentUser) { box.innerHTML += "<p>Please login.</p>"; return; }
         box.innerHTML += `<h3>History</h3><div id="h-items" style="max-height:250px; overflow-y:auto;">Loading...</div>`;
-        db.ref('transactions/'+currentUser.uid).on('value', snap => {
+        db.ref('transactions/'+currentUser.uid).limitToLast(15).on('value', snap => {
             const h = document.getElementById('h-items'); h.innerHTML = "";
-            snap.forEach(c => { const d = c.val(); h.innerHTML += `<div style="font-size:11px; padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${d.type}</span><span>NPR ${d.amount}</span><span style="color:var(--accent)">${d.status}</span></div>`; });
+            snap.forEach(c => { 
+                const d = c.val(); 
+                h.innerHTML += `<div style="font-size:11px; padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${d.type}</span><span>NPR ${d.amount}</span><span style="color:${d.status === 'win' ? 'var(--up)' : (d.status === 'lost' ? 'var(--down)' : 'var(--accent)')}">${d.status}</span></div>`; 
+            });
         });
     }
 
-    // --- LOGIC ---
+    // --- LOGIC FUNCTIONS ---
     async function doAuth(mode) {
         const e = document.getElementById('email').value, p = document.getElementById('pass').value;
         try {
             if(mode==='login') await auth.signInWithEmailAndPassword(e,p);
-            else { const c = await auth.createUserWithEmailAndPassword(e,p); await db.ref('users/'+c.user.uid).set({balance:0, email:e}); }
+            else { 
+                const c = await auth.createUserWithEmailAndPassword(e,p); 
+                await db.ref('users/'+c.user.uid).set({balance:0, email:e, tradeCount: 0}); 
+            }
             closeModal();
         } catch(err) { alert(err.message); }
     }
 
+    function handleLogout() { auth.signOut(); toggleSidebar(false); }
+
     async function doDeposit() {
         const amt = document.getElementById('d-amt').value, file = document.getElementById('d-file').files[0];
         if(!currentUser) return alert("Please Login!");
-        if(amt < 300 || !file) return alert("Invalid amount or missing file!");
+        if(amt < 300 || !file) return alert("Check amount or file!");
         const ref = storage.ref(`proofs/${currentUser.uid}_${Date.now()}`);
         await ref.put(file); const url = await ref.getDownloadURL();
         await db.ref('deposits').push({userId:currentUser.uid, amount:amt, proof:url, status:'pending'});
         await db.ref('transactions/'+currentUser.uid).push({type:'Deposit', amount:amt, status:'pending'});
-        alert("Sent!"); closeModal();
+        alert("Sent for approval!"); closeModal();
     }
 
     async function doWithdraw() {
-        const amt = document.getElementById('w-amt').value, name = document.getElementById('w-name').value, num = document.getElementById('w-num').value;
+        const amt = parseFloat(document.getElementById('w-amt').value);
+        const name = document.getElementById('w-name').value, num = document.getElementById('w-num').value;
         if(!currentUser) return alert("Please Login!");
-        if(!amt || !name || !num) return alert("Fill all fields!");
+        if(!amt || amt > balance) return alert("Invalid amount!");
+        db.ref('users/'+currentUser.uid+'/balance').set(balance - amt);
         await db.ref('withdrawals').push({userId:currentUser.uid, amount:amt, esewaName:name, esewaNum:num, status:'pending'});
         await db.ref('transactions/'+currentUser.uid).push({type:'Withdraw', amount:amt, status:'pending'});
         alert("Requested!"); closeModal();
     }
 
+    // --- TRADE LOGIC (2 WIN, 8 LOSS) ---
     function handleTrade(dir) {
-        if(!currentUser) { alert("⚠️ Please Sign In to Trade!"); openModal('auth'); return; }
+        if(!currentUser) { alert("Please Sign In!"); return; }
         const amt = parseFloat(document.getElementById('trade-amt').value);
         const time = parseInt(document.getElementById('trade-time').value);
-        if(amt < 300 || amt > 10000) return alert("Investment must be 300 - 10,000");
-        if(amt > balance) return alert("Insufficient Balance!");
+        if(amt < 300 || amt > balance) return alert("Check balance or amount!");
+
+        // Deduct initial balance
+        db.ref('users/' + currentUser.uid + '/balance').set(balance - amt);
 
         const tid = 'tr-' + Date.now();
-        document.getElementById('active-trades').insertAdjacentHTML('beforeend', `<div class="trade-card" id="${tid}"><div style="width:30px; height:30px; border:2px solid var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px;" id="timer-${tid}">${time}</div><div><div style="font-size:9px; color:var(--text-dim);">${dir} ORDER</div><div style="font-weight:bold; color:${dir==='UP'? 'var(--up)':'var(--down)'}">NPR ${amt}</div></div></div>`);
+        document.getElementById('active-trades').insertAdjacentHTML('beforeend', `
+            <div class="trade-card" id="${tid}">
+                <div style="width:30px; height:30px; border:2px solid var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px;" id="timer-${tid}">${time}</div>
+                <div><div style="font-size:9px; color:var(--text-dim);">${dir} ORDER</div><div style="font-weight:bold; color:var(--accent)">NPR ${amt}</div></div>
+            </div>`);
 
         let left = time;
         const count = setInterval(() => {
             left--; if(document.getElementById('timer-'+tid)) document.getElementById('timer-'+tid).innerText = left;
-            if(left <= 0) { clearInterval(count); if(document.getElementById(tid)) document.getElementById(tid).remove(); alert("Trade Finished!"); }
+            if(left <= 0) { 
+                clearInterval(count); 
+                document.getElementById(tid).remove();
+                executeTradeResult(amt); 
+            }
         }, 1000);
+    }
+
+    function executeTradeResult(invested) {
+        let currentCycle = tradeCount + 1;
+        // Logic: Wins on trade #3 and #7 of every 10 trades
+        let winStatus = (currentCycle % 10 === 3 || currentCycle % 10 === 7);
+        
+        if(winStatus) {
+            let winAmt = invested * 1.85; // 85% Profit
+            db.ref('users/'+currentUser.uid+'/balance').set(balance + winAmt);
+            db.ref('transactions/'+currentUser.uid).push({type:'Trade', amount: winAmt.toFixed(2), status:'win'});
+            alert("✨ Profit! +NPR " + winAmt.toFixed(2));
+        } else {
+            db.ref('transactions/'+currentUser.uid).push({type:'Trade', amount: invested, status:'lost'});
+            alert("❌ Loss! -NPR " + invested);
+        }
+
+        // Update trade cycle in DB
+        db.ref('users/'+currentUser.uid+'/tradeCount').set(currentCycle);
     }
 
     new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv_chart" });
