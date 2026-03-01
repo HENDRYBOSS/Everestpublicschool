@@ -621,7 +621,14 @@
                     isBlocked = data.isBlocked || false;
                     
                     document.getElementById('top-bal').innerText = 'NPR ' + balance.toFixed(2);
-                    document.getElementById('h-name').innerText = 'Guest';
+                    document.getElementById('h-name').innerText  = data.name || 'Trader';
+                    if (data.profilePic) {
+                        document.getElementById('h-pfp').src = data.profilePic;
+                    }
+                });
+            } else {
+                document.getElementById('top-bal').innerText = 'NPR 0.00';
+                document.getElementById('h-name').innerText = 'Guest';
             }
         });
 
@@ -780,7 +787,10 @@
                 <input type="text" id="esewaNum" class="input-f" placeholder="Esewa Number">
                 <input type="text" id="fullName" class="input-f" placeholder="Full Name">
                 <button class="btn-yellow" onclick="submitWithdraw()">Request Withdrawal</button>
-            `;window.submitWithdraw = () => {
+            `;
+        }
+
+        window.submitWithdraw = () => {
             const amount = parseFloat(document.getElementById('withAmount')?.value);
             const esewa = document.getElementById('esewaNum')?.value;
             const name = document.getElementById('fullName')?.value;
@@ -992,5 +1002,3 @@
     </script>
 </body>
 </html>
-        }
-        
