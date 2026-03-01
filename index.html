@@ -3,60 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nepaltr Pro | User</title>
+    <title>Nepaltr Pro | Trading</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --border: #2b3139; --text-dim: #848e9c; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        /* Header */
+        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --border: #2b3139; --up: #0ecb81; --down: #f6465d; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel); border-bottom: 1px solid var(--border); }
-        .pfp-img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); cursor: pointer; }
-
+        
         /* Modals */
-        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
         .modal-box { background: var(--panel); width: 100%; max-width: 360px; padding: 25px; border-radius: 16px; border: 1px solid var(--border); position: relative; }
         .input-f { width: 100%; padding: 12px; margin-bottom: 12px; background: #000; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
         
         /* Buttons */
         .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000; margin-top: 5px; }
-        .google-btn { width: 100%; padding: 12px; background: white; color: #000; border: none; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 15px; border: 1px solid #ddd; }
-        .google-btn img { width: 20px; }
+        .google-btn { width: 100%; padding: 12px; background: white; color: #000; border: none; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 20px; }
+        .google-btn img { width: 18px; }
 
-        /* Sidebar */
-        #sidebar { position: fixed; right: -280px; top: 0; width: 260px; height: 100%; background: var(--panel); z-index: 9000; transition: 0.3s; border-left: 1px solid var(--border); }
-        #sidebar.open { right: 0; }
-        .side-item { padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; }
+        /* Trade Dock */
+        .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); padding: 15px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        .dock-row { display: flex; gap: 10px; }
+        .t-btn { flex: 1; height: 50px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 16px; }
+        
+        #result-anim { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; background: rgba(0,0,0,0.8); font-size: 30px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-weight:bold; font-size: 20px;">Nepal<span style="color:var(--accent)">tr</span></div>
-    <div style="display:flex; align-items:center; gap:12px;">
-        <div id="top-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</div>
-        <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="pfp-img" onclick="openMod('profile')">
-        <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-    </div>
-</header>
+<div id="result-anim"></div>
 
-<div id="sidebar">
-    <div style="padding:25px; background:#12151a; font-weight:bold; color:var(--accent);">MENU</div>
-    <div class="side-item" onclick="openMod('login')">🔑 Login</div>
-    <div class="side-item" onclick="openMod('register')">📝 Register</div>
-    <div class="side-item" onclick="openMod('deposit')">💳 Deposit Funds</div>
-    <div class="side-item" onclick="openMod('withdraw')">💸 Withdrawal</div>
-    <div class="side-item" onclick="openMod('referral')">📢 Refer & Earn</div>
-    <div class="side-item" onclick="auth.signOut(); location.reload();" style="color:#f6465d">Logout</div>
+<header>
+    <div style="font-weight:bold; font-size: 18px;">Nepal<span style="color:var(--accent)">tr</span></div>
+    <div style="display:flex; gap:15px; align-items:center;">
+        <div id="top-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</div>
+        <div onclick="openMod('login')" style="cursor:pointer">👤</div>
+    </header>
+
+<div id="tv_chart" style="height: calc(100vh - 180px);"></div>
+
+<div class="dock">
+    <div class="dock-row">
+        <select id="t-duration" class="input-f" style="margin:0; flex:1;">
+            <option value="30">30 Seconds</option>
+            <option value="60">1 Minute</option>
+            <option value="300">5 Minutes</option>
+            <option value="3600">1 Hour</option>
+            <option value="43200">12 Hours</option>
+        </select>
+        <input type="number" id="t-amount" class="input-f" style="margin:0; flex:1;" value="300" min="300" max="10000" placeholder="Amount">
+    </div>
+    <div class="dock-row">
+        <button class="t-btn" style="background:var(--up)" onclick="startTrade('UP')">CALL</button>
+        <button class="t-btn" style="background:var(--down)" onclick="startTrade('DOWN')">PUT</button>
+    </div>
 </div>
 
 <div id="modal-wrap" class="modal-wrap">
     <div class="modal-box" id="modal-content"></div>
 </div>
-
-<div id="tv_chart" style="height: calc(100vh - 65px);"></div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
@@ -67,11 +73,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
 
-    let currentUser = null, balance = 0;
-
-    // Capture referral UID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('ref')) localStorage.setItem('ref_uid', urlParams.get('ref'));
+    let currentUser = null, balance = 0, tradeCount = 0;
 
     auth.onAuthStateChanged(user => {
         currentUser = user;
@@ -79,108 +81,110 @@
             db.ref('users/' + user.uid).on('value', snap => {
                 const data = snap.val() || {};
                 balance = data.balance || 0;
+                tradeCount = data.tradeCount || 0;
                 document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
-                if(data.profilePic) document.getElementById('h-pfp').src = data.profilePic;
             });
         }
     });
 
-    function toggleSidebar(show) { document.getElementById('sidebar').classList.toggle('open', show); }
-    function closeMod() { document.getElementById('modal-wrap').style.display = 'none'; }
-
     function openMod(type) {
         const box = document.getElementById('modal-content');
         document.getElementById('modal-wrap').style.display = 'flex';
-        box.innerHTML = `<span onclick="closeMod()" style="position:absolute; right:15px; top:10px; cursor:pointer;">✕</span>`;
+        box.innerHTML = `<span onclick="document.getElementById('modal-wrap').style.display='none'" style="position:absolute; right:15px; top:10px; cursor:pointer;">✕</span>`;
 
         if(type === 'login') {
             box.innerHTML += `<h3>Login</h3>
-                <button class="google-btn" onclick="googleAuth()">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Login with Google
+                <button class="google-btn" onclick="googleSignIn()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg"> Continue with Google
                 </button>
                 <input id="em" placeholder="Email" class="input-f">
                 <input id="ps" type="password" placeholder="Password" class="input-f">
-                <button class="btn-yellow" onclick="emailAuth('login')">Sign In</button>
-                <p style="font-size:12px; text-align:center; margin-top:10px;">New? <span onclick="openMod('register')" style="color:var(--accent); cursor:pointer;">Register here</span></p>`;
+                <button class="btn-yellow" onclick="emailLogin()">Login</button>
+                <p style="font-size:12px; text-align:center; margin-top:15px;">Don't have an account? <span onclick="openMod('register')" style="color:var(--accent); cursor:pointer;">Register</span></p>`;
         } else if(type === 'register') {
             box.innerHTML += `<h3>Create Account</h3>
-                <button class="google-btn" onclick="googleAuth()">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Register with Google
-                </button>
-                <input id="em" placeholder="Email" class="input-f">
-                <input id="ps" type="password" placeholder="Password" class="input-f">
-                <button class="btn-yellow" onclick="emailAuth('reg')">Create Account</button>`;
-        } else if(type === 'referral') {
-            const link = window.location.origin + window.location.pathname + "?ref=" + (currentUser ? currentUser.uid : 'LOGIN_REQUIRED');
-            box.innerHTML += `<h3>Refer & Earn</h3>
-                <p style="font-size:12px;">Get 25% commission on friend's deposits!</p>
-                <div style="background:#000; padding:10px; border-radius:8px; font-size:10px; word-break:break-all; border:1px dashed var(--accent); color:var(--accent);">${link}</div>
-                <button class="btn-yellow" onclick="navigator.clipboard.writeText('${link}'); alert('Copied!')">Copy Link</button>`;
-        } else if(type === 'profile') {
-            box.innerHTML += `<h3>Profile Edit</h3>
-                <input id="p-name" placeholder="Display Name" class="input-f">
-                <label style="font-size:11px;">Change Photo</label>
-                <input type="file" id="p-file" class="input-f" accept="image/*">
-                <button class="btn-yellow" onclick="updateProfile()">Update Profile</button>`;
-        } else if(type === 'deposit') {
-            db.ref('admin_settings/qrCode').once('value', snap => {
-                box.innerHTML += `<h3>Deposit</h3>
-                    <img src="${snap.val() || ''}" style="width:160px; display:block; margin:auto; background:white; padding:5px; border-radius:10px;">
-                    <input type="number" id="d-amt" placeholder="Amount Sent" class="input-f" style="margin-top:10px;">
-                    <input type="file" id="d-proof" class="input-f" accept="image/*">
-                    <button class="btn-yellow" onclick="submitDep()">Submit Proof</button>`;
-            });
+                <input id="reg-em" placeholder="Email" class="input-f">
+                <input id="reg-ps" type="password" placeholder="Password" class="input-f">
+                <button class="btn-yellow" onclick="emailRegister()">Register</button>
+                <p style="font-size:12px; text-align:center; margin-top:15px;">Already have an account? <span onclick="openMod('login')" style="color:var(--accent); cursor:pointer;">Login</span></p>`;
         }
     }
 
-    async function googleAuth() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        await initUser(result.user);
-        closeMod();
+    // --- WORKING AUTH FUNCTIONS ---
+    async function googleSignIn() {
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const result = await auth.signInWithPopup(provider);
+            await checkUserRecord(result.user);
+            document.getElementById('modal-wrap').style.display = 'none';
+        } catch (e) { alert("Google Sign-in failed: " + e.message); }
     }
 
-    async function emailAuth(mode) {
+    async function emailLogin() {
         const e = document.getElementById('em').value, p = document.getElementById('ps').value;
         try {
-            const result = (mode === 'login') ? await auth.signInWithEmailAndPassword(e, p) : await auth.createUserWithEmailAndPassword(e, p);
-            if(mode === 'reg') await initUser(result.user);
-            closeMod();
-        } catch(err) { alert(err.message); }
+            await auth.signInWithEmailAndPassword(e, p);
+            document.getElementById('modal-wrap').style.display = 'none';
+        } catch (err) { alert(err.message); }
     }
 
-    async function initUser(user) {
-        const ref = localStorage.getItem('ref_uid');
-        const snap = await db.ref('users/'+user.uid).get();
+    async function emailRegister() {
+        const e = document.getElementById('reg-em').value, p = document.getElementById('reg-ps').value;
+        try {
+            const result = await auth.createUserWithEmailAndPassword(e, p);
+            await checkUserRecord(result.user);
+            alert("Account Created!");
+            document.getElementById('modal-wrap').style.display = 'none';
+        } catch (err) { alert(err.message); }
+    }
+
+    async function checkUserRecord(user) {
+        const snap = await db.ref('users/' + user.uid).get();
         if(!snap.exists()) {
-            await db.ref('users/'+user.uid).set({ balance: 0, tradeCount: 0, referredBy: ref || null });
+            await db.ref('users/' + user.uid).set({ balance: 0, tradeCount: 0, email: user.email });
         }
     }
 
-    function updateProfile() {
-        const name = document.getElementById('p-name').value;
-        const file = document.getElementById('p-file').files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                await db.ref('users/'+currentUser.uid).update({ name: name, profilePic: reader.result });
-                alert("Profile Updated!"); closeMod();
-            };
+    // --- TRADE LOGIC ---
+    function startTrade(dir) {
+        const amt = parseFloat(document.getElementById('t-amount').value);
+        const dur = parseInt(document.getElementById('t-duration').value);
+
+        if(!currentUser) return openMod('login');
+        if(amt < 300 || amt > 10000) return alert("Investment must be between 300 and 10,000");
+        if(balance < amt) return alert("Insufficient Balance!");
+
+        db.ref('users/' + currentUser.uid + '/balance').set(balance - amt);
+        
+        const anim = document.getElementById('result-anim');
+        anim.style.display = 'flex';
+        anim.innerHTML = `<span style="color:var(--accent)">Waiting for Result...</span><br><span id="timer-display" style="font-size:20px;"></span>`;
+
+        let timeLeft = (dur > 30) ? 5 : dur; // Visual countdown cap for long trades
+        const countdown = setInterval(() => {
+            document.getElementById('timer-display').innerText = timeLeft + "s";
+            timeLeft--;
+            if(timeLeft < 0) {
+                clearInterval(countdown);
+                finishTrade(amt);
+            }
+        }, 1000);
+    }
+
+    function finishTrade(amt) {
+        tradeCount++;
+        const win = (tradeCount % 10 === 3 || tradeCount % 10 === 7);
+        const anim = document.getElementById('result-anim');
+
+        if(win) {
+            const profit = amt * 1.85;
+            db.ref('users/' + currentUser.uid + '/balance').set(balance + profit);
+            anim.innerHTML = `<span style="color:var(--up)">WIN<br>+NPR ${profit.toFixed(0)}</span>`;
         } else {
-            db.ref('users/'+currentUser.uid).update({ name: name });
-            alert("Name Updated!"); closeMod();
+            anim.innerHTML = `<span style="color:var(--down)">LOSS<br>-NPR ${amt}</span>`;
         }
-    }
-
-    function submitDep() {
-        const amt = document.getElementById('d-amt').value, file = document.getElementById('d-proof').files[0];
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            await db.ref('admin_deposits').push({ uid: currentUser.uid, amount: amt, proof: reader.result, status: 'pending' });
-            alert("Proof Sent! Waiting for Admin approval."); closeMod();
-        };
+        db.ref('users/' + currentUser.uid + '/tradeCount').set(tradeCount);
+        setTimeout(() => anim.style.display = 'none', 3000);
     }
 
     new TradingView.widget({"autosize": true, "symbol": "BINANCE:BTCUSDT", "theme": "dark", "container_id": "tv_chart"});
