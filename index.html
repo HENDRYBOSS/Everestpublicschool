@@ -329,4 +329,104 @@
                 timestamp: Date.now(),
                 guestEmail: guestEmail
             }).then(() => {
-             
+alert("Withdrawal request submitted. Admin will process.");
+                closeModal();
+            });
+        };
+
+        // ---------- TX HISTORY ----------
+        function renderTxHistory(box) {
+            box.innerHTML += `<h3>📋 Deposit / Withdraw</h3><div id="txList">Loading...</div>`;
+            const depositPromise = db.ref('depositRequests').orderByChild('uid').equalTo(currentUser.uid).once('value');
+            const withdrawPromise = db.ref('withdrawRequests').orderByChild('uid').equalTo(currentUser.uid).once('value');
+            Promise.all([depositPromise, withdrawPromise]).then(([depSnap, witSnap]) => {
+                let html = '';
+                depSnap.forEach(c => {
+                    const d = c.val();
+                    html += `<div class="hist-item">💰 Deposit NPR ${d.amount} <span class="hist-small">${new Date(d.timestamp).toLocaleString()}</span><br>Status: <b>${d.status}</b> (tx: ${d.txInfo})<br>📎 ${d.fileName || 'screenshot'}</div>`;
+                });
+                witSnap.forEach(c => {
+                    const d = c.val();
+                    html += `<div class="hist-item">💸 Withdraw NPR ${d.amount} → ${d.esewa} <span class="hist-small">${new Date(d.timestamp).toLocaleString()}</span><br>Status: <b>${d.status}</b></div>`;
+                });
+                if (!html) html = '<p>No transactions yet.</p>';
+                document.getElementById('txList').innerHTML = html;
+            });
+        }
+
+        // ---------- TRADE HISTORY ----------
+        function renderTradeHistory(box) {
+            box.innerHTML += `<h3>📊 Today's Trades (24h)</h3><div id="tradeHistList">Loading...</div>`;
+            const oneDayAgo = Date.now() - 24*60*60*1000;
+            db.ref('tradeHistory').orderByChild('uid').equalTo(currentUser.uid).once('value').then(snap => {
+                let html = '';
+                snap.forEach(c => {
+                    const t = c.val();
+                    if (t.timestamp > oneDayAgo) {
+                        html += `<div class="hist-item">${t.dir} ${t.amount} NPR → ${t.result} <span class="hist-small">${new Date(t.timestamp).toLocaleTimeString()}</span></div>`;
+                    }
+                });
+                if (!html) html = '<p>No trades in last 24h.</p>';
+                document.getElementById('tradeHistList').innerHTML = html;
+            });
+        }
+
+        // ---------- TRADING ----------
+        window.handleTrade = (dir) => {
+             if (!currentUser) return openModal('auth');
+            if (isBlocked) return alert("Blocked");
+            const amt = parseFloat(document.getElementById('t-amt').value);
+            if (amt < 10 || amt > balance) return alert("Invalid amount");
+            const time = parseInt(document.getElementById('t-time').value);
+            
+            db.ref('users/'+currentUser.uid+'/balance').set(balance - amt);
+
+            const tradeId = 'tr-'+Date.now()+'-'+Math.random().toString(36).substring(2,5);
+            const activeDiv = document.createElement('div');
+            activeDiv.id = tradeId; activeDiv.className = 'trade-badge';
+            activeDiv.innerText = `${time}s · ${dir} · NPR ${amt}`;
+            document.getElementById('active-trades').appendChild(activeDiv);
+
+            setTimeout(() => {
+                document.getElementById(tradeId)?.remove();
+                const newTradeCount = tradeCounter + 1;
+                db.ref('users/'+currentUser.uid+'/tradeCount').set(newTradeCount);
+                
+                const isWin = (newTradeCount % 5 === 2); 
+                const overlay = document.getElementById('result-screen');
+                overlay.style.display = 'flex';
+
+                let profit = 0;
+                if (isWin) {
+                    profit = amt * 1.85;
+                    db.ref('users/'+currentUser.uid+'/balance').once('value', s => {
+                        const cur = s.val() || 0;
+                        db.ref('users/'+currentUser.uid+'/balance').set(cur + profit);
+                    });
+                    overlay.innerHTML = `<div class="win-txt">PROFIT<br><span style="font-size:25px;">+NPR ${profit.toFixed(2)}</span></div>`;
+                } else {
+                    overlay.innerHTML = `<div class="loss-txt">LOSS<br><span style="font-size:25px;">-NPR ${amt}</span></div>`;
+                                                           }
+                db.ref('tradeHistory').push({
+                    uid: currentUser.uid,
+                    dir: dir,
+                    amount: amt,
+                    result: isWin ? 'win' : 'loss',
+                    payout: isWin ? profit : 0,
+                    timestamp: Date.now()
+                });
+
+                setTimeout(() => overlay.style.display = 'none', 2500);
+            }, time * 1000);
+        };
+
+        // Chart
+        new TradingView.widget({
+            autosize: true, symbol: "BINANCE:BTCUSDT", interval: "1", theme: "dark",
+            container_id: "tv_chart", hide_top_toolbar: true
+        });
+
+    })();
+</script>
+</body>
+</html>
