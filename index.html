@@ -3,309 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nepaltr Pro - Premium Trading</title>
+    <title>Nepaltr Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-storage-compat.js"></script>
-    
     <style>
-        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --up: #0ecb81; --down: #f6465d; --text-dim: #848e9c; --border: #2b3139; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        header { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; height: 55px; border-bottom: 1px solid var(--border); background: var(--panel); z-index: 1001; }
-        #top-bal { font-size: 14px; font-weight: bold; color: var(--accent); }
-        .user-profile-trigger { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .pfp-small { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #333; border: 1px solid var(--accent); }
-
-        #sidebar { position: fixed; right: -280px; top: 0; width: 260px; height: 100%; background: var(--panel); z-index: 9000; transition: 0.3s; border-left: 1px solid var(--border); }
-        #sidebar.open { right: 0; }
-        .side-item { padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer; color: white; font-size: 14px; }
-
-        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9500; padding: 20px; }
-        .modal-box { background: var(--panel); width: 100%; max-width: 400px; border-radius: 16px; padding: 25px; border: 1px solid var(--border); position: relative; max-height: 80vh; overflow-y: auto; }
-        .close-x { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: var(--text-dim); }
-        .input-f { width: 100%; padding: 12px; margin-bottom: 12px; background: #12151a; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
-
-        .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); border-top: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
-        .dock-row { display: flex; gap: 10px; }
-        .inp-box { flex: 1; background: #12151a; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
-        .inp-box label { font-size: 9px; color: var(--text-dim); display: block; text-transform: uppercase; }
-        .inp-box input, .inp-box select { background: transparent; border: none; color: white; width: 100%; font-weight: bold; outline: none; }
-        .t-btn { flex: 1; height: 50px; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; color: white; cursor: pointer; }
-
-        #active-trades { position: absolute; top: 70px; right: 20px; z-index: 2000; }
-        .trade-card { background: var(--panel); border-left: 4px solid var(--accent); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-        .ref-box { background: #12151a; padding: 10px; border-radius: 8px; font-size: 11px; word-break: break-all; margin: 10px 0; border: 1px dashed var(--accent); color: var(--accent); }
+        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --up: #0ecb81; --down: #f6465d; --border: #2b3139; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--panel); border-bottom: 1px solid var(--border); }
+        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .modal-box { background: var(--panel); width: 85%; max-width: 350px; padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
+        .input-f { width: 100%; padding: 12px; margin-bottom: 12px; background: #000; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000; }
+        #result-anim { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 10000; background: rgba(0,0,0,0.85); font-size: 35px; font-weight: 900; }
     </style>
 </head>
 <body>
 
+<div id="result-anim"></div>
+
 <header>
-    <div style="font-size:18px; font-weight:bold;">Nepal<span style="color:var(--accent)">tr</span></div>
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <div id="top-bal">NPR 0.00</div>
-        <div class="user-profile-trigger" onclick="openModal('profile')">
-            <img id="header-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="pfp-small">
-            <span id="header-name" style="font-size: 12px; font-weight: bold;">Guest</span>
-        </div>
-        <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-    </div>
+    <div style="font-weight:bold;">Nepal<span style="color:var(--accent)">tr</span></div>
+    <div id="top-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</div>
+    <div onclick="openMod('auth')" style="cursor:pointer">👤</div>
 </header>
 
-<div id="sidebar">
-    <div style="padding:25px; background:#12151a; font-weight:bold;">Menu</div>
-    <div class="side-item" onclick="openModal('auth')" id="auth-label">👤 Sign In / Register</div>
-    <div class="side-item" onclick="openModal('referral')">📢 Refer & Earn (25%)</div>
-    <div class="side-item" onclick="openModal('deposit')">💳 Deposit Funds</div>
-    <div class="side-item" onclick="openModal('withdraw')">💸 Withdrawal</div>
-    <div class="side-item" onclick="openModal('history')">📜 History</div>
-    <div class="side-item" onclick="handleLogout()">🚪 Logout</div>
-    <div class="side-item" onclick="toggleSidebar(false)" style="color:gray;">❌ Close</div>
+<div id="tv_chart" style="height: calc(100vh - 160px);"></div>
+
+<div style="position:fixed; bottom:0; width:100%; background:var(--panel); padding:15px; display:flex; gap:10px; box-sizing:border-box; border-top:1px solid var(--border);">
+    <button style="flex:1; background:var(--up); color:white; border:none; height:55px; border-radius:10px; font-weight:bold;" onclick="trade('UP')">CALL</button>
+    <button style="flex:1; background:var(--down); color:white; border:none; height:55px; border-radius:10px; font-weight:bold;" onclick="trade('DOWN')">PUT</button>
 </div>
 
 <div id="modal-wrap" class="modal-wrap">
     <div class="modal-box" id="modal-content"></div>
 </div>
 
-<div id="active-trades"></div>
-<div id="tv_chart" style="height: calc(100vh - 170px); background:#0b0e11;"></div>
-
-<div class="dock">
-    <div class="dock-row">
-        <div class="inp-box"><label>Timer</label><select id="trade-time"><option value="30">30 Sec</option><option value="60">1 Min</option></select></div>
-        <div class="inp-box"><label>Amount (NPR)</label><input type="number" id="trade-amt" value="300"></div>
-    </div>
-    <div class="dock-row">
-        <button class="t-btn" style="background:var(--up)" onclick="handleTrade('UP')">UP</button>
-        <button class="t-btn" style="background:var(--down)" onclick="handleTrade('DOWN')">DOWN</button>
-    </div>
-</div>
-
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
-      authDomain: "earning-website-644a7.firebaseapp.com",
-      databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "earning-website-644a7",
-      storageBucket: "earning-website-644a7.firebasestorage.app",
-      messagingSenderId: "20748471330",
-      appId: "1:20748471330:web:5e8d18499679ecb3d04e7b",
-      measurementId: "G-696F2S2RKN"
+      databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
+    const db = firebase.database(), auth = firebase.auth();
 
-    let currentUser = null;
-    let balance = 0;
-    let tradeCounter = 0;
-
-    // Referral Tracking Logic
-    const urlParams = new URLSearchParams(window.location.search);
-    const refBy = urlParams.get('ref');
-    if(refBy) localStorage.setItem('referredBy', refBy);
+    let balance = 0, tradeCount = 0, currentUser = null;
 
     auth.onAuthStateChanged(user => {
         currentUser = user;
         if(user) {
-            document.getElementById('auth-label').innerText = "👤 Dashboard";
             db.ref('users/' + user.uid).on('value', snap => {
                 const data = snap.val() || {};
                 balance = data.balance || 0;
-                tradeCounter = data.tradeCount || 0;
+                tradeCount = data.tradeCount || 0;
                 document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
-                document.getElementById('header-name').innerText = data.name || user.email.split('@')[0];
-                if(data.profilePic) document.getElementById('header-pfp').src = data.profilePic;
             });
-        } else {
-            document.getElementById('header-name').innerText = "Guest";
-            document.getElementById('header-pfp').src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
         }
     });
 
-    function toggleSidebar(open) { document.getElementById('sidebar').classList.toggle('open', open); }
-    function closeModal() { document.getElementById('modal-wrap').style.display = 'none'; }
-    function handleLogout() { auth.signOut(); toggleSidebar(false); }
-
-    function openModal(type) {
+    function openMod(type) {
         const box = document.getElementById('modal-content');
         document.getElementById('modal-wrap').style.display = 'flex';
-        box.innerHTML = `<span class="close-x" onclick="closeModal()">×</span>`;
-        if(type === 'auth') renderAuth(box);
-        else if(type === 'profile') renderProfile(box);
-        else if(type === 'referral') renderReferral(box);
-        else if(type === 'deposit') renderDeposit(box);
-        else if(type === 'withdraw') renderWithdraw(box);
-        else if(type === 'history') renderHistory(box);
+        if(type === 'auth') {
+            box.innerHTML = `<h3>Login / Register</h3>
+                <input id="email" placeholder="Email" class="input-f">
+                <input id="pass" type="password" placeholder="Password" class="input-f">
+                <button class="btn-yellow" onclick="doAuth()">Submit</button>
+                <button onclick="document.getElementById('modal-wrap').style.display='none'">Close</button>`;
+        } else if(type === 'deposit') {
+            db.ref('admin_settings/qrCode').once('value', snap => {
+                box.innerHTML = `<h3>Deposit</h3>
+                    <img src="${snap.val() || ''}" style="width:150px; display:block; margin:auto; background:white; padding:5px;">
+                    <input type="number" id="d-amt" placeholder="Amount" class="input-f" style="margin-top:10px;">
+                    <input type="file" id="d-file" class="input-f" accept="image/*">
+                    <button class="btn-yellow" onclick="saveDep()">Submit Screenshot</button>`;
+            });
+        }
     }
 
-    function renderAuth(box, mode='login') {
-        box.innerHTML += `<h3>${mode==='login'?'Sign In':'Register'}</h3>
-            <input type="email" id="email" placeholder="Email" class="input-f">
-            <input type="password" id="pass" placeholder="Password" class="input-f">
-            <button class="btn-yellow" onclick="doAuth('${mode}')">${mode==='login'?'Login':'Register'}</button>
-            <p onclick="renderAuth(document.getElementById('modal-content'), '${mode==='login'?'reg':'login'}')" style="text-align:center; font-size:12px; margin-top:15px; cursor:pointer; color:var(--accent);">${mode==='login'?'Create Account':'Back to Login'}</p>`;
-    }
-
-    async function doAuth(mode) {
+    async function doAuth() {
         const e = document.getElementById('email').value.trim(), p = document.getElementById('pass').value;
-        try {
-            if(mode==='login') await auth.signInWithEmailAndPassword(e,p);
-            else { 
-                const c = await auth.createUserWithEmailAndPassword(e,p); 
-                const referredBy = localStorage.getItem('referredBy') || null;
-                await db.ref('users/'+c.user.uid).set({
-                    balance:0, tradeCount:0, email:e, name: e.split('@')[0], 
-                    referredBy: referredBy, isFirstDeposit: true
-                }); 
+        try { await auth.signInWithEmailAndPassword(e, p); }
+        catch { 
+            const c = await auth.createUserWithEmailAndPassword(e, p);
+            await db.ref('users/'+c.user.uid).set({balance:0, tradeCount:0, isFirstDeposit: true});
+        }
+        document.getElementById('modal-wrap').style.display='none';
+    }
+
+    function saveDep() {
+        const amt = document.getElementById('d-amt').value, file = document.getElementById('d-file').files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            await db.ref('admin_deposits').push({uid: currentUser.uid, amount: amt, proof: reader.result, status:'pending'});
+            alert("Sent to admin!");
+            document.getElementById('modal-wrap').style.display='none';
+        };
+    }
+
+    function trade(dir) {
+        if(!currentUser || balance < 300) return alert("Check Login/Balance");
+        db.ref('users/'+currentUser.uid+'/balance').set(balance - 300);
+        setTimeout(() => {
+            tradeCount++;
+            const win = (tradeCount % 10 === 3 || tradeCount % 10 === 7);
+            const anim = document.getElementById('result-anim');
+            anim.style.display = 'flex';
+            if(win) {
+                db.ref('users/'+currentUser.uid+'/balance').set(balance + 555);
+                anim.innerHTML = `<span style="color:var(--up)">WIN<br>+NPR 555</span>`;
+            } else {
+                anim.innerHTML = `<span style="color:var(--down)">LOSS<br>-NPR 300</span>`;
             }
-            closeModal();
-        } catch(err) { alert(err.message); }
+            db.ref('users/'+currentUser.uid+'/tradeCount').set(tradeCount);
+            setTimeout(() => anim.style.display = 'none', 2000);
+        }, 3000);
     }
 
-    function renderProfile(box) {
-        if(!currentUser) return box.innerHTML += "Please login";
-        box.innerHTML += `<h3>Edit Profile</h3>
-            <div style="text-align:center;"><img id="p-preview" src="${document.getElementById('header-pfp').src}" style="width:80px;height:80px;border-radius:50%;margin-bottom:10px;"></div>
-            <label style="font-size:11px;">Update Name</label>
-            <input type="text" id="p-name" value="${document.getElementById('header-name').innerText}" class="input-f">
-            <label style="font-size:11px;">Update Photo</label>
-            <input type="file" id="p-file" class="input-f" accept="image/*">
-            <button class="btn-yellow" onclick="updateProfileData()">Save Changes</button>`;
-    }
-
-    async function updateProfileData() {
-        const name = document.getElementById('p-name').value;
-        const file = document.getElementById('p-file').files[0];
-        let pfpUrl = null;
-
-        if(file) {
-            const ref = storage.ref(`profiles/${currentUser.uid}`);
-            await ref.put(file); pfpUrl = await ref.getDownloadURL();
-        }
-
-        const updates = { name: name };
-        if(pfpUrl) updates.profilePic = pfpUrl;
-        await db.ref('users/'+currentUser.uid).update(updates);
-        alert("Profile Updated!"); closeModal();
-    }
-
-    function renderReferral(box) {
-        if(!currentUser) return box.innerHTML += "Please login";
-        const link = window.location.origin + window.location.pathname + "?ref=" + currentUser.uid;
-        box.innerHTML += `<h3>Refer & Earn</h3>
-            <p style="font-size:12px; color:var(--text-dim);">Earn 25% commission on your friend's deposits! Your friends also get 20% bonus on their 1st deposit.</p>
-            <div class="ref-box" id="ref-link">${link}</div>
-            <button class="btn-yellow" onclick="copyLink()">Copy Link</button>`;
-    }
-
-    function copyLink() {
-        navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
-        alert("Link Copied!");
-    }
-
-    function renderDeposit(box) {
-        box.innerHTML += `<h3>Deposit</h3><input type="number" id="d-amt" placeholder="Amount (min 300)" class="input-f"><input type="file" id="d-file" class="input-f"><button class="btn-yellow" onclick="doDeposit()">Submit Proof</button>`;
-    }
-
-    async function doDeposit() {
-        const amt = parseFloat(document.getElementById('d-amt').value);
-        const file = document.getElementById('d-file').files[0];
-        if(!currentUser || isNaN(amt) || !file) return alert("Error!");
-        
-        const ref = storage.ref(`proofs/${currentUser.uid}_${Date.now()}`);
-        await ref.put(file);
-        const url = await ref.getDownloadURL();
-
-        // Admin Approval Logic (Simulated)
-        // In a real app, an admin would trigger this logic. Here we do it manually for demo:
-        processDeposit(currentUser.uid, amt, url);
-        alert("Deposit submitted! Admin will verify."); closeModal();
-    }
-
-    // THIS FUNCTION SHOULD BE CALLED BY ADMIN LATER - Integrated logic for bonus/commission
-    async function processDeposit(uid, amount, proof) {
-        const userSnap = await db.ref('users/'+uid).get();
-        const userData = userSnap.val();
-        let finalDeposit = amount;
-
-        // 20% Bonus for User if 1st Deposit
-        if(userData.isFirstDeposit) {
-            finalDeposit += (amount * 0.20);
-            await db.ref('users/'+uid).update({isFirstDeposit: false});
-        }
-
-        // Add Balance to User
-        await db.ref('users/'+uid+'/balance').set((userData.balance || 0) + finalDeposit);
-        await db.ref('transactions/'+uid).push({type: 'Deposit', amount: finalDeposit, status: 'Success'});
-
-        // 25% Commission to Referrer
-        if(userData.referredBy) {
-            const refUid = userData.referredBy;
-            const refSnap = await db.ref('users/'+refUid).get();
-            if(refSnap.exists()) {
-                const commission = amount * 0.25;
-                const refBal = refSnap.val().balance || 0;
-                await db.ref('users/'+refUid+'/balance').set(refBal + commission);
-                await db.ref('transactions/'+refUid).push({type: 'Commission', amount: commission, from: userData.name});
-            }
-        }
-    }
-
-    function renderWithdraw(box) { box.innerHTML += `<h3>Withdraw</h3><input type="number" id="w-amt" placeholder="Amount" class="input-f"><button class="btn-yellow" onclick="doWithdraw()">Request</button>`; }
-    async function doWithdraw() {
-        const amt = parseFloat(document.getElementById('w-amt').value);
-        if(amt > balance) return alert("Low balance!");
-        await db.ref('users/'+currentUser.uid+'/balance').set(balance - amt);
-        await db.ref('transactions/'+currentUser.uid).push({type: 'Withdrawal', amount: amt});
-        alert("Requested!"); closeModal();
-    }
-
-    function renderHistory(box) {
-        box.innerHTML += `<h3>History</h3><div id="h-list">Loading...</div>`;
-        db.ref('transactions/'+currentUser.uid).on('value', snap => {
-            const h = document.getElementById('h-list'); h.innerHTML = "";
-            snap.forEach(c => { h.innerHTML += `<div style="padding:8px; border-bottom:1px solid #333; font-size:11px;"><b>${c.val().type}</b>: NPR ${c.val().amount}</div>`; });
-        });
-    }
-
-    function handleTrade(dir) {
-        if(!currentUser) return alert("Login first!");
-        const amt = parseFloat(document.getElementById('trade-amt').value);
-        const time = parseInt(document.getElementById('trade-time').value);
-        if(amt > balance || amt < 300) return alert("Check balance (Min 300)!");
-        db.ref('users/' + currentUser.uid + '/balance').set(balance - amt);
-        const tid = 'tr-' + Date.now();
-        document.getElementById('active-trades').insertAdjacentHTML('beforeend', `<div class="trade-card" id="${tid}"><div id="timer-${tid}" style="border:1px solid var(--accent);padding:5px;border-radius:50%;">${time}</div> <div>Order: NPR ${amt}</div></div>`);
-        let left = time;
-        const count = setInterval(() => {
-            left--; document.getElementById('timer-'+tid).innerText = left;
-            if(left <= 0) { clearInterval(count); document.getElementById(tid).remove(); processResult(amt); }
-        }, 1000);
-    }
-
-    function processResult(amt) {
-        tradeCounter++;
-        const isWin = (tradeCounter % 10 === 3 || tradeCounter % 10 === 7);
-        db.ref('users/'+currentUser.uid+'/tradeCount').set(tradeCounter);
-        if(isWin) {
-            const winAmt = amt * 1.85;
-            db.ref('users/'+currentUser.uid+'/balance').set(balance + winAmt);
-            db.ref('transactions/'+currentUser.uid).push({type: 'Trade Win', amount: winAmt.toFixed(2)});
-            alert("WIN! +NPR " + winAmt.toFixed(2));
-        } else {
-            db.ref('transactions/'+currentUser.uid).push({type: 'Trade Loss', amount: amt});
-            alert("LOSS!");
-        }
-    }
-
-    new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "theme": "dark", "container_id": "tv_chart" });
+    new TradingView.widget({"autosize": true, "symbol": "BINANCE:BTCUSDT", "theme": "dark", "container_id": "tv_chart"});
 </script>
 </body>
-    </html>
-    
+</html>
