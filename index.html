@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nepaltr | Pro Trading</title>
+    <title>Nepaltr | Official Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -12,35 +12,34 @@
         body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel); border-bottom: 1px solid var(--border); height: 60px; box-sizing: border-box; }
         
-        /* Google Button Style */
-        .google-btn { width: 100%; padding: 12px; background: white; color: black; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 15px; }
+        /* Auth UI */
+        .google-btn { width: 100%; padding: 12px; background: white; color: black; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 15px; border: none; }
         .google-btn img { width: 18px; }
 
         /* History Tabs */
-        .history-tabs { display: flex; background: #000; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
-        .tab-btn { flex: 1; padding: 12px; font-size: 11px; background: none; border: none; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: #1a1a1a; }
+        .history-tabs { display: flex; background: #000; border-radius: 8px; margin-bottom: 15px; overflow: hidden; border: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 12px; font-size: 11px; background: none; border: none; color: var(--text-dim); cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { color: var(--accent); background: #1a1a1a; border-bottom: 2px solid var(--accent); }
         .h-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #222; font-size: 12px; align-items: center; }
 
-        /* Modals */
+        /* Modal & Result Screen */
         .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 9999; }
         .modal-box { background: var(--panel); width: 92%; max-width: 400px; padding: 20px; border-radius: 16px; border: 1px solid var(--border); position: relative; max-height: 85vh; overflow-y: auto; }
         .input-f { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
-        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: black; }
         
-        /* Live Trade Indicator */
         #active-zone { position: absolute; top: 70px; right: 15px; z-index: 1000; }
-        .live-card { padding: 10px 15px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(0,0,0,0.8); text-align: center; min-width: 100px; }
-        .status-up { color: var(--up); text-shadow: 0 0 5px var(--up); }
-        .status-down { color: var(--down); text-shadow: 0 0 5px var(--down); }
+        .live-card { padding: 10px 15px; border-radius: 8px; background: rgba(0,0,0,0.85); text-align: center; border: 1px solid var(--accent); transition: 0.3s; }
+        .pulse-win { border-color: var(--up); box-shadow: 0 0 10px var(--up); }
+        .pulse-loss { border-color: var(--down); box-shadow: 0 0 10px var(--down); }
 
-        #result-screen { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; background: rgba(0,0,0,0.85); text-align: center; }
-        .win-txt { color: var(--up); font-size: 40px; font-weight: 900; animation: zoom 0.5s; }
-        .loss-txt { color: var(--down); font-size: 40px; font-weight: 900; animation: shake 0.4s; }
+        #result-screen { position: fixed; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; background: rgba(0,0,0,0.9); }
+        .win-txt { color: var(--up); font-size: 40px; font-weight: 900; animation: zoom 0.5s; text-align: center; }
+        .loss-txt { color: var(--down); font-size: 40px; font-weight: 900; animation: shake 0.4s; text-align: center; }
         @keyframes zoom { from { transform: scale(0); } to { transform: scale(1); } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
 
         .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); padding: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
+        .trade-btn { flex: 1; border: none; height: 45px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -51,18 +50,17 @@
     <div style="font-weight:bold; font-size:18px;">Nepal<span style="color:var(--accent)">tr</span></div>
     <div style="display:flex; align-items:center; gap:10px;">
         <div id="top-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</div>
-        <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:30px; border-radius:50%; border:1px solid gold;" onclick="openModal('profile')">
+        <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:32px; height:32px; border-radius:50%; border:1px solid gold; cursor:pointer;" onclick="openModal('history')">
         <div onclick="document.getElementById('side').style.right='0'" style="cursor:pointer; font-size:20px;">☰</div>
     </div>
 </header>
 
 <div id="side" style="position:fixed; right:-280px; top:0; width:260px; height:100%; background:var(--panel); z-index:9500; transition:0.3s; border-left:1px solid var(--border);">
-    <div style="padding:20px; color:var(--accent); font-weight:bold; border-bottom:1px solid var(--border);" onclick="this.parentElement.style.right='-280px'">✕ CLOSE MENU</div>
+    <div style="padding:20px; color:var(--accent); font-weight:bold; border-bottom:1px solid var(--border); cursor:pointer;" onclick="this.parentElement.style.right='-280px'">✕ CLOSE MENU</div>
     <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('auth')">👤 Login / Register</div>
-    <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('deposit')">💳 Deposit</div>
-    <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('withdraw')">💸 Withdraw</div>
-    <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('history')">📜 My History</div>
-    <div style="padding:15px; color:var(--down);" onclick="auth.signOut(); location.reload();">Logout</div>
+    <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('history')">📜 Trade History</div>
+    <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('history')">💳 Deposit/Withdraw</div>
+    <div style="padding:15px; color:var(--down); cursor:pointer;" onclick="auth.signOut(); location.reload();">Logout</div>
 </div>
 
 <div id="modal-wrap" class="modal-wrap"><div class="modal-box" id="modal-content"></div></div>
@@ -72,12 +70,12 @@
 
 <div class="dock">
     <div style="display:flex; gap:10px;">
-        <div style="flex:1;"><label style="font-size:10px; color:gray;">DURATION</label><select id="t-time" class="input-f" style="margin:0;"><option value="30">30s</option><option value="60">1m</option></select></div>
+        <div style="flex:1;"><label style="font-size:10px; color:gray;">TIME</label><select id="t-time" class="input-f" style="margin:0;"><option value="30">30s</option><option value="60">1m</option></select></div>
         <div style="flex:1;"><label style="font-size:10px; color:gray;">INVEST (NPR)</label><input type="number" id="t-amt" value="300" class="input-f" style="margin:0;"></div>
     </div>
     <div style="display:flex; gap:10px;">
-        <button onclick="handleTrade('UP')" style="flex:1; background:var(--up); border:none; height:45px; border-radius:8px; color:white; font-weight:bold;">CALL</button>
-        <button onclick="handleTrade('DOWN')" style="flex:1; background:var(--down); border:none; height:45px; border-radius:8px; color:white; font-weight:bold;">PUT</button>
+        <button onclick="handleTrade('UP')" class="trade-btn" style="background:var(--up);">CALL</button>
+        <button onclick="handleTrade('DOWN')" class="trade-btn" style="background:var(--down);">PUT</button>
     </div>
 </div>
 
@@ -85,7 +83,7 @@
 <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
-      authDomain: "earning-website-644a7.firebaseapp.com", // FIXED THIS FOR YOU
+      authDomain: "earning-website-644a7.firebaseapp.com", // FIXED
       databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "earning-website-644a7",
       storageBucket: "earning-website-644a7.appspot.com",
@@ -97,15 +95,29 @@
 
     let currentUser = null, balance = 0, tradeCounter = 0;
 
-    auth.onAuthStateChanged(user => {
+    // PROFILE CREATION LOGIC
+    auth.onAuthStateChanged(async (user) => {
         currentUser = user;
         if(user) {
-            db.ref('users/' + user.uid).on('value', snap => {
-                const d = snap.val() || {};
+            const userRef = db.ref('users/' + user.uid);
+            const snap = await userRef.get();
+            
+            if(!snap.exists()) {
+                // If Google user is new, create their profile node immediately
+                await userRef.set({ 
+                    balance: 0, 
+                    tradeCount: 0, 
+                    email: user.email, 
+                    name: user.displayName || "Trader" 
+                });
+            }
+
+            userRef.on('value', s => {
+                const d = s.val() || {};
                 balance = d.balance || 0;
                 tradeCounter = d.tradeCount || 0;
                 document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
-                if(d.profilePic) document.getElementById('h-pfp').src = d.profilePic;
+                if(user.photoURL) document.getElementById('h-pfp').src = user.photoURL;
             });
         }
     });
@@ -113,10 +125,7 @@
     async function googleLogin() {
         const provider = new firebase.auth.GoogleAuthProvider();
         try {
-            const result = await auth.signInWithPopup(provider);
-            const user = result.user;
-            const snap = await db.ref('users/' + user.uid).get();
-            if(!snap.exists()) await db.ref('users/' + user.uid).set({ balance: 0, tradeCount: 0 });
+            await auth.signInWithPopup(provider);
             document.getElementById('modal-wrap').style.display = 'none';
         } catch(e) { alert(e.message); }
     }
@@ -127,73 +136,63 @@
         box.innerHTML = `<span onclick="document.getElementById('modal-wrap').style.display='none'" style="position:absolute; right:15px; top:10px; cursor:pointer;">✕</span>`;
 
         if(t === 'auth') {
-            box.innerHTML += `<h3>Account Access</h3>
+            box.innerHTML += `<h3>Join Nepaltr</h3>
                 <button class="google-btn" onclick="googleLogin()">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Continue with Google
                 </button>
+                <div style="text-align:center; color:gray; font-size:11px; margin-bottom:15px;">OR EMAIL</div>
                 <input id="em" placeholder="Email" class="input-f">
                 <input id="ps" type="password" placeholder="Password" class="input-f">
-                <button class="btn-yellow" onclick="emailAuth('login')">Login</button>
-                <button class="btn-yellow" style="background:#333; color:white; margin-top:10px;" onclick="emailAuth('reg')">Register</button>`;
+                <button class="btn-yellow" style="width:100%" onclick="emailAuth('login')">Login</button>`;
         } else if(t === 'history') {
-            box.innerHTML += `<h3>Transaction History</h3>
+            box.innerHTML += `<h3>History Center</h3>
                 <div class="history-tabs">
-                    <button id="btn-tr" class="tab-btn active" onclick="loadHist('trades')">Trades</button>
-                    <button id="btn-dp" class="tab-btn" onclick="loadHist('deposits')">Deposit</button>
-                    <button id="btn-wd" class="tab-btn" onclick="loadHist('withdraws')">Withdraw</button>
+                    <button id="tab-tr" class="tab-btn active" onclick="loadHist('trades')">Trades</button>
+                    <button id="tab-dp" class="tab-btn" onclick="loadHist('deposits')">Deposit</button>
+                    <button id="tab-wd" class="tab-btn" onclick="loadHist('withdraws')">Withdraw</button>
                 </div>
-                <div id="hist-list">Loading...</div>`;
+                <div id="hist-list" style="min-height:200px;">Select a category...</div>`;
             loadHist('trades');
         }
-    }
-
-    async function emailAuth(mode) {
-        const e = document.getElementById('em').value, p = document.getElementById('ps').value;
-        try {
-            if(mode === 'login') await auth.signInWithEmailAndPassword(e, p);
-            else {
-                const c = await auth.createUserWithEmailAndPassword(e, p);
-                await db.ref('users/' + c.user.uid).set({ balance: 0, tradeCount: 0 });
-            }
-            document.getElementById('modal-wrap').style.display = 'none';
-        } catch(err) { alert(err.message); }
     }
 
     async function handleTrade(dir) {
         if(!currentUser) return openModal('auth');
         const amt = parseFloat(document.getElementById('t-amt').value);
         const time = parseInt(document.getElementById('t-time').value);
-        if(balance < amt) return alert("Insufficient Balance");
+        if(balance < amt) return alert("Low Balance!");
 
         db.ref('users/'+currentUser.uid+'/balance').set(balance - amt);
         const tid = 'tr-' + Date.now();
         
         document.getElementById('active-zone').innerHTML = `
             <div id="${tid}" class="live-card">
-                <div id="st-text" class="status-up">● PROFIT</div>
+                <div id="st-text" style="font-weight:bold;">● CALCULATING</div>
                 <div style="font-size:20px; font-weight:bold;" id="timer-text">${time}s</div>
             </div>`;
 
         let left = time;
         const timer = setInterval(() => {
             left--;
+            const card = document.getElementById(tid);
+            const stText = document.getElementById('st-text');
             document.getElementById('timer-text').innerText = left + "s";
             
-            // Random simulation of current status (Green/Red) during animation
-            const isProfit = Math.random() > 0.45;
-            const stText = document.getElementById('st-text');
+            // LIVE PROFIT/LOSS ANIMATION
+            const isProfit = Math.random() > 0.5;
             stText.innerText = isProfit ? "● PROFIT" : "● LOSS";
-            stText.className = isProfit ? "status-up" : "status-down";
+            stText.style.color = isProfit ? 'var(--up)' : 'var(--down)';
+            card.className = "live-card " + (isProfit ? "pulse-win" : "pulse-loss");
 
             if(left <= 0) {
                 clearInterval(timer);
-                document.getElementById(tid).remove();
-                executeFinal(amt);
+                card.remove();
+                finishTrade(amt);
             }
         }, 1000);
     }
 
-    function executeFinal(amt) {
+    function finishTrade(amt) {
         tradeCounter++;
         const isWin = (tradeCounter % 10 === 3 || tradeCounter % 10 === 7);
         db.ref('users/'+currentUser.uid+'/tradeCount').set(tradeCounter);
@@ -214,28 +213,29 @@
 
     function loadHist(type) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + (type==='trades'?'tr':type==='deposits'?'dp':'wd')).classList.add('active');
+        document.getElementById('tab-' + (type==='trades'?'tr':type==='deposits'?'dp':'wd')).classList.add('active');
         
         const list = document.getElementById('hist-list');
         list.innerHTML = "Fetching...";
         const path = type === 'trades' ? 'hist_trades' : (type === 'deposits' ? 'admin_deposits' : 'admin_withdraws');
         
-        db.ref(path + '/' + currentUser.uid).orderByChild('time').limitToLast(15).once('value', snap => {
+        db.ref(path + '/' + currentUser.uid).orderByChild('time').limitToLast(10).once('value', snap => {
             let html = "";
             snap.forEach(child => {
                 const d = child.val();
                 const status = d.status || 'pending';
                 const color = (status === 'WIN' || status === 'approved') ? 'var(--up)' : (status === 'pending' ? 'orange' : 'var(--down)');
                 html += `<div class="h-row">
-                    <div><div style="font-weight:bold;">NPR ${d.amt || d.amount}</div><div style="font-size:10px; color:gray;">${new Date(d.time).toLocaleDateString()}</div></div>
+                    <div><b>NPR ${d.amt || d.amount}</b><br><small style="color:gray;">${new Date(d.time).toLocaleDateString()}</small></div>
                     <div style="color:${color}; font-weight:bold;">${status.toUpperCase()}</div>
                 </div>`;
             });
-            list.innerHTML = html || "<div style='text-align:center; padding:20px; color:gray;'>No records found</div>";
+            list.innerHTML = html || "<p style='text-align:center; padding:20px;'>No history found.</p>";
         });
     }
 
     new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv_chart", "hide_top_toolbar": true });
 </script>
 </body>
-</html>
+    </html>
+    
