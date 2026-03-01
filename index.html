@@ -21,7 +21,8 @@
         .modal-box { background: var(--panel); width: 100%; max-width: 400px; border-radius: 16px; padding: 25px; border: 1px solid var(--border); position: relative; }
         .close-x { position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: var(--text-dim); font-weight: bold; }
         .input-f { width: 100%; padding: 12px; margin-bottom: 12px; background: #12151a; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-google { width: 100%; padding: 12px; background: white; color: #444; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); border-top: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
         .dock-row { display: flex; gap: 10px; }
         .inp-box { flex: 1; background: #12151a; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
@@ -72,7 +73,6 @@
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-    // --- YOUR NEW FIREBASE CONFIG ---
     const firebaseConfig = {
       apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
       authDomain: "earning-website-644a7.firebaseapp.com",
@@ -96,7 +96,7 @@
     auth.onAuthStateChanged(user => {
         currentUser = user;
         if(user) {
-            document.getElementById('auth-label').innerText = "👤 " + user.email.split('@')[0];
+            document.getElementById('auth-label').innerText = "👤 " + (user.displayName || user.email.split('@')[0]);
             db.ref('users/' + user.uid + '/balance').on('value', snap => {
                 balance = snap.val() || 0;
                 document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
@@ -120,25 +120,47 @@
     }
 
     function renderAuth(box, mode='login') {
-        box.innerHTML += `<h3>${mode==='login'?'Sign In':'Register'}</h3>
+        box.innerHTML += `
+            <h3>${mode==='login'?'Sign In':'Register'}</h3>
             <input type="email" id="email" placeholder="Email" class="input-f">
             <input type="password" id="pass" placeholder="Password" class="input-f">
-            <button class="btn-yellow" onclick="doAuth('${mode}')">${mode==='login'?'Login':'Register'}</button>`;
+            <button class="btn-yellow" onclick="doAuth('${mode}')">${mode==='login'?'Login':'Register'}</button>
+            <button class="btn-google" onclick="doGoogleAuth()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Sign in with Google
+            </button>
+            <p onclick="renderAuth(document.getElementById('modal-content'), '${mode==='login'?'reg':'login'}')" style="text-align:center; font-size:12px; margin-top:15px; cursor:pointer; color:var(--accent);">${mode==='login'?'New? Create Account':'Have account? Login'}</p>`;
     }
 
     async function doAuth(mode) {
-        const e = document.getElementById('email').value, p = document.getElementById('pass').value;
+        const e = document.getElementById('email').value.trim(); // TRIM added to prevent formatting errors
+        const p = document.getElementById('pass').value;
+        if(!e || !p) return alert("Fill all fields!");
         try {
             if(mode==='login') await auth.signInWithEmailAndPassword(e,p);
-            else { const c = await auth.createUserWithEmailAndPassword(e,p); await db.ref('users/'+c.user.uid).set({balance:0, tradeCount:0, email:e}); }
+            else { 
+                const c = await auth.createUserWithEmailAndPassword(e,p); 
+                await db.ref('users/'+c.user.uid).set({balance:0, tradeCount:0, email:e}); 
+            }
             closeModal();
         } catch(err) { alert(err.message); }
     }
 
-    function renderDeposit(box) {
-        box.innerHTML += `<h3>Deposit</h3><input type="number" id="d-amt" placeholder="Amount" class="input-f"><input type="file" id="d-file" class="input-f"><button class="btn-yellow" onclick="doDeposit()">Submit</button>`;
+    async function doGoogleAuth() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            const result = await auth.signInWithPopup(provider); // signInWithPopup handles Google login
+            const user = result.user;
+            // Check if user is new and initialize their data
+            const snap = await db.ref('users/' + user.uid).once('value');
+            if(!snap.exists()) {
+                await db.ref('users/' + user.uid).set({balance:0, tradeCount:0, email:user.email});
+            }
+            closeModal();
+        } catch(err) { alert(err.message); }
     }
 
+    // --- OTHER FEATURES KEPT SAME ---
+    function renderDeposit(box) { box.innerHTML += `<h3>Deposit</h3><input type="number" id="d-amt" placeholder="Amount" class="input-f"><input type="file" id="d-file" class="input-f"><button class="btn-yellow" onclick="doDeposit()">Submit</button>`; }
     async function doDeposit() {
         const amt = document.getElementById('d-amt').value, file = document.getElementById('d-file').files[0];
         if(!currentUser || !file) return alert("Error!");
@@ -147,11 +169,7 @@
         await db.ref('deposits').push({userId:currentUser.uid, amount:amt, proof:url, status:'pending'});
         alert("Sent!"); closeModal();
     }
-
-    function renderWithdraw(box) {
-        box.innerHTML += `<h3>Withdraw</h3><input type="number" id="w-amt" placeholder="Amount" class="input-f"><button class="btn-yellow" onclick="doWithdraw()">Request</button>`;
-    }
-
+    function renderWithdraw(box) { box.innerHTML += `<h3>Withdraw</h3><input type="number" id="w-amt" placeholder="Amount" class="input-f"><button class="btn-yellow" onclick="doWithdraw()">Request</button>`; }
     async function doWithdraw() {
         const amt = document.getElementById('w-amt').value;
         if(amt > balance) return alert("Low balance!");
@@ -159,7 +177,6 @@
         await db.ref('withdrawals').push({userId:currentUser.uid, amount:amt, status:'pending'});
         alert("Requested!"); closeModal();
     }
-
     function renderHistory(box) {
         box.innerHTML += `<h3>History</h3><div id="h-list">Loading...</div>`;
         db.ref('transactions/'+currentUser.uid).on('value', snap => {
@@ -167,36 +184,24 @@
             snap.forEach(c => { h.innerHTML += `<div style="padding:5px; border-bottom:1px solid #333;">${c.val().type}: NPR ${c.val().amount}</div>`; });
         });
     }
-
-    // --- 2 WIN / 8 LOSS LOGIC ---
     function handleTrade(dir) {
         if(!currentUser) return alert("Login first!");
         const amt = parseFloat(document.getElementById('trade-amt').value);
         const time = parseInt(document.getElementById('trade-time').value);
-        if(amt > balance) return alert("Insufficient balance!");
-
-        // Deduct balance
+        if(amt > balance) return alert("Low balance!");
         db.ref('users/' + currentUser.uid + '/balance').set(balance - amt);
-
         const tid = 'tr-' + Date.now();
         document.getElementById('active-trades').insertAdjacentHTML('beforeend', `<div class="trade-card" id="${tid}"><div id="timer-${tid}">${time}</div> <div>Trade: NPR ${amt}</div></div>`);
-
         let left = time;
         const count = setInterval(() => {
             left--; document.getElementById('timer-'+tid).innerText = left;
-            if(left <= 0) { 
-                clearInterval(count); document.getElementById(tid).remove(); 
-                processResult(amt); 
-            }
+            if(left <= 0) { clearInterval(count); document.getElementById(tid).remove(); processResult(amt); }
         }, 1000);
     }
-
     function processResult(amt) {
         tradeCounter++;
-        // Win on trade 3 and 7 of every 10 trades
-        const isWin = (tradeCounter % 10 === 3 || tradeCounter % 10 === 7);
+        const isWin = (tradeCounter % 10 === 3 || tradeCounter % 10 === 7); // 2 WIN, 8 LOSS
         db.ref('users/'+currentUser.uid+'/tradeCount').set(tradeCounter);
-
         if(isWin) {
             const winAmt = amt * 1.85;
             db.ref('users/'+currentUser.uid+'/balance').set(balance + winAmt);
@@ -208,7 +213,7 @@
         }
     }
 
-    new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv_chart" });
+    new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "theme": "dark", "container_id": "tv_chart" });
 </script>
 </body>
 </html>
