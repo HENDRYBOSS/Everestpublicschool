@@ -3,210 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nepaltr | Pro Trading</title>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+    <title>Nepaltr Pro - Secure Terminal</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
     <style>
-        :root { --bg: #0b0e11; --panel: #181a20; --accent: #fcd535; --up: #0ecb81; --down: #f6465d; --border: #2b3139; --text-dim: #848e9c; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel); border-bottom: 1px solid var(--border); height: 60px; box-sizing: border-box; }
+        :root { --bg: #060d17; --panel: #111a27; --accent: #fcc419; --up: #00c076; --down: #ff3b30; --border: #1c2735; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; }
         
-        /* Auth Buttons */
-        .google-btn { width: 100%; padding: 12px; background: white; color: black; border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 15px; border: none; }
-        .google-btn img { width: 18px; }
+        /* --- AUTH SCREEN --- */
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .auth-box { background: var(--panel); padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; border: 1px solid var(--border); }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #060d17; border: 1px solid var(--border); color: white; border-radius: 8px; }
 
-        /* History & Modal Tabs */
-        .history-tabs { display: flex; background: #000; border-radius: 8px; margin-bottom: 15px; overflow: hidden; border: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 12px; font-size: 11px; background: none; border: none; color: var(--text-dim); cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { color: var(--accent); background: #1a1a1a; border-bottom: 2px solid var(--accent); }
-        .h-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #222; font-size: 12px; align-items: center; }
+        /* --- APP INTERFACE --- */
+        #app-interface { display: none; flex-direction: column; height: 100vh; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; height: 60px; background: var(--panel); border-bottom: 1px solid var(--border); }
+        
+        /* --- WALLET HUB --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 15000; justify-content: center; align-items: center; }
+        .hub-box { background: var(--panel); width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; text-align: center; }
+        .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .hub-item { background: #060d17; padding: 15px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; }
 
-        .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 9999; }
-        .modal-box { background: var(--panel); width: 92%; max-width: 400px; padding: 20px; border-radius: 16px; border: 1px solid var(--border); position: relative; max-height: 85vh; overflow-y: auto; }
-        .input-f { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
-        .btn-yellow { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: black; }
-
-        .dock { position: fixed; bottom: 0; width: 100%; background: var(--panel); padding: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
-        .trade-btn { flex: 1; border: none; height: 45px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+        /* --- BOTTOM TRADE DOCK --- */
+        .trade-dock { background: var(--panel); padding: 15px; border-top: 1px solid var(--border); }
+        .btn-row { display: flex; gap: 10px; height: 50px; }
+        .trade-btn { flex: 1; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div id="result-screen" style="position:fixed; inset:0; display:none; flex-direction:column; justify-content:center; align-items:center; z-index:10000; background:rgba(0,0,0,0.9);"></div>
-
-<header>
-    <div style="font-weight:bold; font-size:18px;">Nepal<span style="color:var(--accent)">tr</span></div>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div id="top-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</div>
-        <img id="h-pfp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:32px; height:32px; border-radius:50%; border:1px solid gold; cursor:pointer;" onclick="openModal('history')">
-        <div onclick="document.getElementById('side').style.right='0'" style="cursor:pointer; font-size:20px;">☰</div>
+<div id="auth-screen">
+    <div class="auth-box">
+        <h2 style="color:var(--accent); text-align:center;">NEPALTR PRO</h2>
+        <input type="email" id="email" class="auth-input" placeholder="Email">
+        <input type="password" id="pass" class="auth-input" placeholder="Password">
+        <input type="text" id="promo" class="auth-input" placeholder="Promo Code (Optional)">
+        <button onclick="handleAuth('login')" class="auth-input" style="background:var(--accent); color:black; font-weight:bold;">Login</button>
+        <button onclick="handleAuth('register')" style="background:transparent; border:none; color:#848e9c; width:100%; margin-top:10px;">Create Account</button>
+        <p id="auth-error" style="color:var(--down); font-size:12px; text-align:center; margin-top:10px;"></p>
     </div>
-</header>
-
-<div id="side" style="position:fixed; right:-280px; top:0; width:260px; height:100%; background:var(--panel); z-index:9500; transition:0.3s; border-left:1px solid var(--border);">
-    <div style="padding:20px; color:var(--accent); font-weight:bold; border-bottom:1px solid var(--border); cursor:pointer;" onclick="this.parentElement.style.right='-280px'">✕ CLOSE MENU</div>
-    
-    <div id="auth-menu">
-        <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('auth')">👤 Login / Register</div>
-    </div>
-    
-    <div id="user-menu" style="display:none;">
-        <div style="padding:15px; border-bottom:1px solid #222; font-size:14px; color:var(--accent);">Welcome, <span id="side-name">Trader</span></div>
-        <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('deposit')">💳 Deposit Funds</div>
-        <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('withdraw')">💸 Withdraw Payout</div>
-        <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('history')">📜 Trade History</div>
-        <div style="padding:15px; border-bottom:1px solid #222;" onclick="openModal('refer')">🤝 Refer & Earn</div>
-    </div>
-    
-    <div style="padding:15px; color:var(--down); cursor:pointer;" onclick="auth.signOut(); location.reload();">Logout</div>
 </div>
 
-<div id="modal-wrap" class="modal-wrap"><div class="modal-box" id="modal-content"></div></div>
+<div id="app-interface">
+    <header>
+        <div style="font-weight:bold;">NEPALTR</div>
+        <div onclick="openHub()" style="cursor:pointer; background:rgba(252,196,25,0.1); padding:5px 12px; border-radius:20px; border:1px solid var(--accent);">
+            <span id="user-bal" style="color:var(--accent); font-weight:bold;">NPR 0.00</span> 👛
+        </div>
+    </header>
 
-<div id="tv_chart" style="height: calc(100vh - 175px);"></div>
+    <div id="chart-area" style="flex:1;"><div id="tv_widget" style="height:100%;"></div></div>
 
-<div class="dock">
-    <div style="display:flex; gap:10px;">
-        <div style="flex:1;"><label style="font-size:10px; color:gray;">TIME</label><select id="t-time" class="input-f" style="margin:0;"><option value="30">30s</option></select></div>
-        <div style="flex:1;"><label style="font-size:10px; color:gray;">INVEST</label><input type="number" id="t-amt" value="300" class="input-f" style="margin:0;"></div>
+    <div class="trade-dock">
+        <div class="btn-row">
+            <button class="trade-btn" style="background:var(--up);" onclick="alert('Call Placed')">UP</button>
+            <button class="trade-btn" style="background:var(--down);" onclick="alert('Put Placed')">DOWN</button>
+        </div>
     </div>
-    <div style="display:flex; gap:10px;">
-        <button onclick="handleTrade('UP')" class="trade-btn" style="background:var(--up);">CALL</button>
-        <button onclick="handleTrade('DOWN')" class="trade-btn" style="background:var(--down);">PUT</button>
+</div>
+
+<div id="hub-modal" class="modal" onclick="closeHub(event)">
+    <div class="hub-box">
+        <h3 style="margin:0;">Financial Hub</h3>
+        <div class="hub-grid">
+            <div class="hub-item" onclick="alert('Opening Deposit...')">💰 Deposit</div>
+            <div class="hub-item" onclick="alert('Opening Withdraw...')">🏧 Withdraw</div>
+            <div class="hub-item" onclick="alert('Showing History...')">📜 History</div>
+            <div class="hub-item" onclick="copyReferral()">🔗 Refer & Earn</div>
+        </div>
+        <button onclick="logout()" style="margin-top:20px; background:var(--down); color:white; border:none; padding:10px 20px; border-radius:5px;">Logout</button>
     </div>
 </div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCNt94Sr7tvtY6bLQcYCYeRb_cTcah7fE4",
-      authDomain: "earning-website-644a7.firebaseapp.com",
-      databaseURL: "https://earning-website-644a7-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "earning-website-644a7",
-      storageBucket: "earning-website-644a7.appspot.com",
-      messagingSenderId: "20748471330",
-      appId: "1:20748471330:web:5e8d18499679ecb3d04e7b"
-    };
+    const firebaseConfig = { /* Your Config Here */ };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database(), auth = firebase.auth();
+    const auth = firebase.auth();
 
-    let currentUser = null, balance = 0, tradeCounter = 0;
+    // --- 12 HOUR SESSION LOGIC ---
+    function handleAuth(type) {
+        const lastLogin = localStorage.getItem('last_login_time');
+        const now = Date.now();
+        
+        if (lastLogin && (now - lastLogin < 12 * 60 * 60 * 1000)) {
+            const remaining = Math.ceil((12 * 60 * 60 * 1000 - (now - lastLogin)) / (60 * 60 * 1000));
+            document.getElementById('auth-error').innerText = `Security Lock: Try again in ${remaining} hours.`;
+            return;
+        }
 
-    auth.onAuthStateChanged(async (user) => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+
+        if(type === 'login') {
+            auth.signInWithEmailAndPassword(email, pass).then(() => {
+                localStorage.setItem('last_login_time', Date.now());
+            }).catch(err => document.getElementById('auth-error').innerText = err.message);
+        } else {
+            auth.createUserWithEmailAndPassword(email, pass).catch(err => document.getElementById('auth-error').innerText = err.message);
+        }
+    }
+
+    auth.onAuthStateChanged(user => {
         if(user) {
-            currentUser = user;
-            document.getElementById('auth-menu').style.display = 'none';
-            document.getElementById('user-menu').style.display = 'block';
-            document.getElementById('side-name').innerText = user.displayName || user.email.split('@')[0];
-
-            db.ref('users/' + user.uid).on('value', s => {
-                const d = s.val() || { balance: 0, tradeCount: 0 };
-                balance = d.balance;
-                tradeCounter = d.tradeCount;
-                document.getElementById('top-bal').innerText = "NPR " + balance.toFixed(2);
-                if(user.photoURL) document.getElementById('h-pfp').src = user.photoURL;
-            });
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-interface').style.display = 'flex';
+            initChart();
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('app-interface').style.display = 'none';
         }
     });
 
-    async function googleLogin() {
-        try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            const res = await auth.signInWithPopup(provider);
-            const snap = await db.ref('users/' + res.user.uid).get();
-            if(!snap.exists()) await db.ref('users/' + res.user.uid).set({ balance: 0, tradeCount: 0, referralCode: Math.random().toString(36).substring(7).toUpperCase() });
-            document.getElementById('modal-wrap').style.display = 'none';
-        } catch(e) { alert(e.message); }
+    function openHub() { document.getElementById('hub-modal').style.display = 'flex'; }
+    function closeHub(e) { if(e.target.className === 'modal') e.target.style.display = 'none'; }
+    function logout() { auth.signOut(); }
+    
+    function copyReferral() {
+        const link = "https://nepaltr.pro/register?ref=" + auth.currentUser.uid;
+        navigator.clipboard.writeText(link);
+        alert("Referral Link Copied!");
     }
 
-    function openModal(t) {
-        const box = document.getElementById('modal-content');
-        document.getElementById('modal-wrap').style.display = 'flex';
-        box.innerHTML = `<span onclick="document.getElementById('modal-wrap').style.display='none'" style="position:absolute; right:15px; top:10px; cursor:pointer;">✕</span>`;
-
-        if(t === 'auth') {
-            box.innerHTML += `<h3>Account Access</h3><button class="google-btn" onclick="googleLogin()"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Google Login</button>`;
-        } else if(t === 'refer') {
-            db.ref('users/'+currentUser.uid+'/referralCode').once('value', s => {
-                box.innerHTML += `<h3>Refer & Earn</h3><p style="color:gray;">Share your code and get 5% commission on every friend's deposit.</p>
-                <div style="background:#000; padding:15px; border-radius:8px; text-align:center; font-size:24px; font-weight:bold; color:var(--accent); border:1px dashed var(--accent);">${s.val() || 'NOT_FOUND'}</div>`;
-            });
-        } else if(t === 'deposit') {
-            box.innerHTML += `<h3>Deposit NPR</h3><p style="font-size:12px; color:gray;">Send amount to eSewa: <b>98XXXXXXXX</b></p>
-                <input id="dep-amt" type="number" placeholder="Amount Sent" class="input-f">
-                <input id="dep-txn" placeholder="Txn ID / Screenshot Link" class="input-f">
-                <button class="btn-yellow" onclick="submitDeposit()">Submit Request</button>`;
-        } else if(t === 'withdraw') {
-            box.innerHTML += `<h3>Withdraw Payout</h3><input id="wd-amt" type="number" placeholder="Amount" class="input-f">
-                <input id="wd-wallet" placeholder="eSewa/Khalti Number" class="input-f">
-                <button class="btn-yellow" onclick="submitWithdraw()">Request Payout</button>`;
-        } else if(t === 'history') {
-            box.innerHTML += `<h3>History Center</h3><div class="history-tabs">
-                <button id="tab-tr" class="tab-btn active" onclick="loadHist('trades')">Trades</button>
-                <button id="tab-dp" class="tab-btn" onclick="loadHist('deposits')">Deposit</button>
-                <button id="tab-wd" class="tab-btn" onclick="loadHist('withdraws')">Withdraw</button>
-            </div><div id="hist-list">Loading...</div>`;
-            loadHist('trades');
-        }
+    function initChart() {
+        new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv_widget" });
     }
-
-    function submitDeposit() {
-        const amt = document.getElementById('dep-amt').value;
-        if(amt < 300) return alert("Min Deposit NPR 300");
-        db.ref('admin_deposits/' + currentUser.uid).push({ amount: amt, status: 'pending', time: Date.now() });
-        alert("Request Sent! Pending Approval.");
-        document.getElementById('modal-wrap').style.display = 'none';
-    }
-
-    function submitWithdraw() {
-        const amt = document.getElementById('wd-amt').value;
-        if(amt > balance) return alert("Insufficient Balance");
-        db.ref('admin_withdraws/' + currentUser.uid).push({ amount: amt, status: 'pending', time: Date.now() });
-        alert("Withdrawal requested.");
-        document.getElementById('modal-wrap').style.display = 'none';
-    }
-
-    function loadHist(type) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + (type==='trades'?'tr':type==='deposits'?'dp':'wd')).classList.add('active');
-        const list = document.getElementById('hist-list');
-        list.innerHTML = "Fetching...";
-        const path = type === 'trades' ? 'hist_trades' : (type === 'deposits' ? 'admin_deposits' : 'admin_withdraws');
-        
-        db.ref(path + '/' + currentUser.uid).orderByChild('time').limitToLast(10).once('value', snap => {
-            let html = "";
-            snap.forEach(c => {
-                const d = c.val();
-                const col = (d.status==='WIN' || d.status==='approved') ? 'var(--up)' : (d.status==='pending' ? 'orange' : 'var(--down)');
-                html += `<div class="h-row"><div><b>NPR ${d.amt || d.amount}</b><br><small>${new Date(d.time).toLocaleDateString()}</small></div>
-                <div style="color:${col}; font-weight:bold;">${d.status.toUpperCase()}</div></div>`;
-            });
-            list.innerHTML = html || "<p style='text-align:center; padding:20px;'>No data found.</p>";
-        });
-    }
-
-    async function handleTrade(dir) {
-        if(!currentUser) return openModal('auth');
-        const amt = parseFloat(document.getElementById('t-amt').value);
-        if(balance < amt) return alert("Low Balance!");
-        db.ref('users/'+currentUser.uid+'/balance').set(balance - amt);
-        setTimeout(() => {
-            tradeCounter++;
-            const isWin = (tradeCounter % 10 === 3 || tradeCounter % 10 === 7);
-            const winAmt = amt * 1.85;
-            if(isWin) {
-                db.ref('users/'+currentUser.uid+'/balance').set(balance + winAmt);
-                db.ref('hist_trades/'+currentUser.uid).push({amt: winAmt, status: 'WIN', time: Date.now()});
-                alert("PROFIT: +NPR " + winAmt.toFixed(2));
-            } else {
-                db.ref('hist_trades/'+currentUser.uid).push({amt: amt, status: 'LOSS', time: Date.now()});
-                alert("LOSS: -NPR " + amt);
-            }
-        }, 30000);
-    }
-
-    new TradingView.widget({ "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv_chart", "hide_top_toolbar": true });
 </script>
 </body>
 </html>
